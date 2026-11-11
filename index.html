@@ -44,6 +44,21 @@ for(let i=1;i<=100;i++){
  const small=document.createElement('small');small.textContent='Unassigned demo ID';
  el.appendChild(small);holder.appendChild(el);
 }
+</script> 
+ 
+<!-- Supabase connection -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = "https://rxjrsbkqytovjqnijqek.supabase.co";
+const SUPABASE_PUBLIC_KEY = "sb_publishable_La3xzuyCRI96ubrMhQj4XQ_Ofd55K-q";
+
+const supabaseClient = supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_PUBLIC_KEY
+);
+
+console.log("QZIX COIN Supabase client ready");
 </script>
+
 </body>
 </html>
