@@ -58,6 +58,39 @@ const supabaseClient = supabase.createClient(
 );
 
 console.log("QZIX COIN Supabase client ready");
+ async function loadQzixTokens() {
+  const holder = document.getElementById("tokens");
+
+  const { data, error } = await supabaseClient
+    .from("qzix_v2_tokens")
+    .select("token, owner_id, created_at");
+
+  if (error) {
+    holder.textContent = "Database error: " + error.message;
+    return;
+  }
+
+  holder.innerHTML = "";
+
+  data.forEach((item) => {
+    const el = document.createElement("div");
+    el.className = "token";
+
+    const name = document.createElement("strong");
+    name.textContent = item.token;
+
+    const owner = document.createElement("small");
+    owner.textContent = item.owner_id
+      ? "Owner: " + item.owner_id
+      : "Unassigned";
+
+    el.appendChild(name);
+    el.appendChild(owner);
+    holder.appendChild(el);
+  });
+}
+
+loadQzixTokens();
 </script>
 
 </body>
