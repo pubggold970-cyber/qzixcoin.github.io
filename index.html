@@ -3,355 +3,289 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#071426">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>QZIX COIN</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#071426;color:#edf4ff;font:16px Arial;padding:18px}
-main{max-width:700px;margin:auto}
-.card{background:#10213a;border:1px solid #294361;border-radius:15px;padding:18px;margin:14px 0}
-h1,h2{margin-top:0}
-h1{color:#66d9c3}
-small,.muted{color:#a9bad0}
-input,select{width:100%;padding:12px;margin:7px 0 12px;background:#09182a;color:white;border:1px solid #294361;border-radius:9px;font-size:16px}
-button{padding:11px 15px;border:1px solid #294361;border-radius:9px;background:#183653;color:white;font-weight:bold;margin:4px;cursor:pointer}
-.primary{background:#66d9c3;color:#06221f}
-table{width:100%;border-collapse:collapse}
-td,th{text-align:left;padding:10px;border-bottom:1px solid #294361;font-size:13px}
-.tablebox{overflow-x:auto}
-.stat{font-size:25px;font-weight:bold;color:#66d9c3}
+main{max-width:650px;margin:auto}
+h1{text-align:center;color:#49d9ff;letter-spacing:2px}
+.card{background:#10213a;border:1px solid #284361;border-radius:14px;padding:17px;margin:14px 0}
+h2{font-size:19px;color:#49d9ff;margin-top:0}
+input,button{width:100%;padding:13px;border-radius:9px;margin:6px 0;font-size:15px}
+input{background:#071426;border:1px solid #35516f;color:white}
+button{background:#08a9d4;color:#001522;border:0;font-weight:bold;cursor:pointer}
+button.secondary{background:#294563;color:white}
+small,.muted{color:#9bb1ca}
+.price{font-size:36px;color:#51e0a0;font-weight:bold}
+.token{padding:12px;border-bottom:1px solid #29415d}
+.token strong{color:#52dcff}
 .hidden{display:none}
-.result{background:#09182a;padding:14px;border-radius:10px;margin-top:12px}
-.notice{background:#332a18;color:#ffe3a6;padding:12px;border-radius:10px;font-size:13px}
-.qrbox{background:white;padding:12px;width:max-content;max-width:100%;border-radius:10px;margin:12px 0}
-.qrbox img,.qrbox canvas{max-width:100%;height:auto}
+#status{padding:10px;color:#ffd47a}
+#qrcode{background:white;padding:12px;display:table;margin:12px auto}
 </style>
 </head>
 <body>
 <main>
-<div class="card">
 <h1>QZIX COIN</h1>
-<p>FIXED DIGITAL TOKEN PROJECT</p>
-<div class="stat">100 TOKENS</div>
-<p>Total Supply: 100</p>
-<p>Token IDs: 001–100</p>
-<p>Current Display Price: <b id="publicPrice">₹1</b></p>
-<div class="notice">Demo system only. This website does not establish legal ownership or guarantee financial returns.</div>
+<p style="text-align:center" class="muted">100 Fixed Tokens · Ownership Verification</p>
+
+<div class="card">
+<h2>Live Market</h2>
+<div class="price" id="price">₹1.00</div>
+<p>Current Level: <b id="level">1</b></p>
+<p>Total Sales: <b id="sales">0</b></p>
+<p>Total Supply: <b>100</b></p>
+<p>Assigned Tokens: <b id="assigned">Loading...</b></p>
+<button class="secondary" onclick="loadMarket()">Refresh Market</button>
 </div>
 
 <div class="card">
-<h2>Buyer / Token Search</h2>
-<p class="muted">Enter Buyer ID or Token ID to find the public record.</p>
-<input id="publicSearch" placeholder="Buyer ID or Token ID">
-<button class="primary" onclick="publicSearch()">Search</button>
-<div id="searchResult"></div>
+<h2>Buyer Profile</h2>
+<div id="userStatus" class="muted">Not logged in</div>
+<input id="email" type="email" placeholder="Email address">
+<input id="password" type="password" placeholder="Password">
+<button onclick="login()">Login</button>
+<button class="secondary" onclick="signup()">Create Account</button>
+<button class="secondary" onclick="logout()">Logout</button>
+<hr>
+<input id="publicId" placeholder="Your Public Buyer ID">
+<input id="displayName" placeholder="Your Display Name">
+<button onclick="saveProfile()">Save Buyer Profile</button>
 </div>
 
 <div class="card">
-<h2>Token Register</h2>
-<div class="tablebox">
-<table>
-<thead><tr><th>Token ID</th><th>Status</th><th>Buyer ID / Name</th></tr></thead>
-<tbody id="tokenRows"></tbody>
-</table>
+<h2>Search Buyer / Token</h2>
+<input id="search" placeholder="Enter Token ID, Token Code or Buyer ID">
+<button onclick="searchTokens()">Search</button>
+<div id="searchResults"></div>
 </div>
+
+<div class="card">
+<h2>All Tokens</h2>
+<div id="tokenList">Loading tokens...</div>
 </div>
 
 <div class="card">
 <h2>QR Verification</h2>
-<div id="qrLocked">
-<p class="notice">QR feature is currently locked. It will become available when the admin sets the display price to ₹1000 or above.</p>
-</div>
-<div id="qrUnlocked" class="hidden">
-<p>QR verification is now available.</p>
-<input id="qrTokenInput" placeholder="Token ID e.g. 001">
-<button class="primary" onclick="makeQR()">Generate QR</button>
-<div id="qrImage" class="qrbox"></div>
-<button onclick="downloadQR()">Download QR</button>
+<div id="qrLocked">QR verification unlocks when the market price reaches ₹1000.</div>
+<div id="qrArea" class="hidden">
+<input id="qrToken" placeholder="Enter Token ID e.g. 001">
+<button onclick="makeQR()">Generate QR</button>
+<div id="qrcode"></div>
+<button class="secondary" onclick="downloadQR()">Download QR</button>
 </div>
 </div>
 
 <div class="card">
-<h2>Admin Login</h2>
-<div id="loginBox">
-<input id="pin" type="password" placeholder="Admin PIN">
-<button class="primary" onclick="login()">Login</button>
-<p class="muted">Demo PIN: 1234</p>
-</div>
-
-<div id="adminPanel" class="hidden">
-<h2>Admin Dashboard</h2>
-<label>Current Display Price (₹)</label>
-<input id="priceInput" type="number" min="1" value="1">
-<button class="primary" onclick="savePrice()">Update Price</button>
-
+<h2>Admin Login & Controls</h2>
+<p class="muted">Only authorized admin account can use these controls.</p>
+<div id="adminStatus">Admin not verified</div>
+<input id="ownerUUID" placeholder="Buyer Account UUID">
+<input id="assignToken" type="number" min="1" max="100" placeholder="Token Number (1-100)">
+<button onclick="assignToken()">Assign Token</button>
 <hr>
-<h3>Assign Buyer to Token</h3>
-<label>Token ID</label>
-<input id="tokenInput" placeholder="001">
-<label>Buyer Public ID / Name</label>
-<input id="buyerInput" maxlength="60" placeholder="e.g. MEMBER-001">
-<button class="primary" onclick="assignToken()">Save Buyer</button>
-<button onclick="resetToken()">Reset Token</button>
-<p id="adminMessage"></p>
-
-<hr>
-<h3>Bulk Token Assignment</h3>
-<label>Buyer Public ID / Name</label>
-<input id="bulkBuyer" placeholder="MEMBER-001">
-<label>Start Token ID</label>
-<input id="bulkStart" value="001">
-<label>End Token ID</label>
-<input id="bulkEnd" value="100">
-<button class="primary" onclick="bulkAssign()">Assign Selected Tokens</button>
-<p id="bulkMessage"></p>
-
-<hr>
-<h3>Buyer Holdings</h3>
-<button onclick="renderAll()">Refresh</button>
-<div class="tablebox">
-<table>
-<thead><tr><th>Buyer ID</th><th>Token IDs</th><th>Total</th></tr></thead>
-<tbody id="holdings"></tbody>
-</table>
+<input id="newPrice" type="number" min="1" step="0.01" placeholder="New Market Price ₹">
+<button onclick="setPrice()">Update Market Price</button>
 </div>
 
-<hr>
-<h3>Ownership History</h3>
-<div class="tablebox">
-<table>
-<thead><tr><th>Date</th><th>Token</th><th>Previous</th><th>New</th></tr></thead>
-<tbody id="history"></tbody>
-</table>
-</div>
-
-<hr>
-<h3>Backup & Restore</h3>
-<button onclick="backup()">Download Backup</button>
-<input type="file" id="restoreFile" accept=".json">
-<button onclick="restore()">Restore Backup</button>
-<button onclick="logout()">Logout</button>
-</div>
-</div>
-
-<div class="card">
-<h2>Project Information</h2>
-<p>Total Supply: 100 fixed tokens</p>
-<p>Unique Token IDs: 001–100</p>
-<p>Buyer Identification: Public Buyer ID / Name</p>
-<p>QR Verification: Available at ₹1000 display price or above.</p>
-<p>Trading: Inactive</p>
-<p class="muted">No guaranteed profit. Public buyer records are demonstration records, not proof of legal ownership.</p>
-</div>
-
-<footer class="muted">QZIX COIN · Fixed Supply Demo · 2026</footer>
+<div id="status"></div>
+<p class="muted" style="text-align:center;font-size:12px">
+QZIX COIN · Fixed supply: 100 · No Sell Option<br>
+Market price changes do not guarantee profit or returns.
+</p>
 </main>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
-const KEY='qzix_records_v3';
-const PRICE='qzix_price_v3';
-const HIST='qzix_history_v3';
-const ids=Array.from({length:100},(_,i)=>String(i+1).padStart(3,'0'));
+const SUPABASE_URL = "https://rxjrsbkqytovjqnijqek.supabase.co";
+const SUPABASE_KEY = "sb_publishable_La3xzuyCRI96ubrMhQj4XQ_Ofd55K-q";
 
-function getRecords(){
- try{return JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){return {}}
-}
-function getRecord(id){
- return getRecords()[id]||{buyer:'',status:'Unassigned'};
-}
-function getHistory(){
- try{return JSON.parse(localStorage.getItem(HIST)||'[]')}catch(e){return []}
-}
-function price(){
- return Math.max(1,Number(localStorage.getItem(PRICE)||1));
-}
-function validID(id){return ids.includes(id)}
-function cleanID(v){return String(v||'').trim().padStart(3,'0')}
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let currentUser = null;
+let isAdmin = false;
+let marketPrice = 1;
 
-function saveRecord(id,buyer){
- const all=getRecords();
- const old=all[id]||{buyer:''};
- all[id]={buyer:buyer,status:buyer?'Assigned':'Unassigned'};
- localStorage.setItem(KEY,JSON.stringify(all));
- if(old.buyer!==buyer){
-  const h=getHistory();
-  h.unshift({date:new Date().toLocaleString(),id,old:old.buyer||'—',next:buyer||'—'});
-  localStorage.setItem(HIST,JSON.stringify(h.slice(0,500)));
- }
+function msg(t){
+ document.getElementById("status").textContent=t;
 }
 
-function updatePriceUI(){
- const p=price();
- document.getElementById('publicPrice').textContent='₹'+p;
- document.getElementById('priceInput').value=p;
- document.getElementById('qrLocked').classList.toggle('hidden',p>=1000);
- document.getElementById('qrUnlocked').classList.toggle('hidden',p<1000);
-}
-function renderAll(){
- const body=document.getElementById('tokenRows');
- body.innerHTML=ids.map(id=>{
-  const r=getRecord(id);
-  return `<tr><td>${id}</td><td>${r.buyer?'Assigned':'Unassigned'}</td><td>${esc(r.buyer||'—')}</td></tr>`;
- }).join('');
-
- const groups={};
- ids.forEach(id=>{
-  const b=getRecord(id).buyer;
-  if(b)(groups[b]??=[]).push(id);
- });
- document.getElementById('holdings').innerHTML=
- Object.keys(groups).length?
- Object.keys(groups).sort().map(b=>
- `<tr><td>${esc(b)}</td><td>${groups[b].join(', ')}</td><td>${groups[b].length}</td></tr>`
- ).join(''):
- '<tr><td colspan="3">No buyer records.</td></tr>';
-
- const h=getHistory();
- document.getElementById('history').innerHTML=h.length?
- h.slice(0,100).map(x=>
- `<tr><td>${esc(x.date)}</td><td>${esc(x.id)}</td><td>${esc(x.old)}</td><td>${esc(x.next)}</td></tr>`
- ).join(''):
- '<tr><td colspan="4">No history.</td></tr>';
- updatePriceUI();
-}
-function esc(v){
- return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function money(n){
+ return "₹"+Number(n||0).toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2});
 }
 
-function publicSearch(){
- const q=document.getElementById('publicSearch').value.trim();
- const out=document.getElementById('searchResult');
- if(!q){out.innerHTML='<p>Enter Buyer ID or Token ID.</p>';return}
- const id=cleanID(q);
- if(validID(id)&&/^\d{1,3}$/.test(q)){
-  showToken(id,out);
-  return;
- }
- const matches=ids.filter(i=>getRecord(i).buyer.toLowerCase()===q.toLowerCase());
- if(!matches.length){
-  out.innerHTML='<div class="result">No matching Buyer ID found.</div>';
-  return;
- }
- out.innerHTML='<div class="result"><b>Buyer ID / Name:</b> '+esc(q)+
- '<p><b>Token IDs:</b> '+matches.join(', ')+'</p><b>Total Tokens:</b> '+matches.length+'</div>';
+async function loadMarket(){
+ try{
+  const {data,error}=await db.rpc("qzix_public_market");
+  if(error) throw error;
+  if(!data || !data.length) throw new Error("Market data not found");
+  const m=data[0];
+  marketPrice=Number(m.current_price);
+  document.getElementById("price").textContent=money(marketPrice);
+  document.getElementById("level").textContent=m.current_level;
+  document.getElementById("sales").textContent=m.total_sales;
+  document.getElementById("qrLocked").classList.toggle("hidden",marketPrice>=1000);
+  document.getElementById("qrArea").classList.toggle("hidden",marketPrice<1000);
+  loadTokens();
+ }catch(e){msg("Market error: "+e.message)}
 }
-function showToken(id,out){
- const r=getRecord(id);
- out.innerHTML=`<div class="result">
- <h3>QZIX COIN · Token ${id}</h3>
- <p><b>Token ID:</b> ${id}</p>
- <p><b>Record Status:</b> ${r.buyer?'Assigned':'Unassigned'}</p>
- <p><b>Buyer Public ID / Name:</b> ${esc(r.buyer||'Not assigned')}</p>
- <p><b>Display Price:</b> ₹${price()}</p>
- <p><b>Legal Ownership:</b> Not established by this demo</p>
+
+async function loadTokens(){
+ const {data,error}=await db.rpc("qzix_public_search",{p_query:""});
+ if(error){msg("Token loading error: "+error.message);return;}
+ const assigned=data.filter(t=>t.buyer_public_id).length;
+ document.getElementById("assigned").textContent=assigned;
+ document.getElementById("tokenList").innerHTML=data.map(t=>tokenHTML(t)).join("");
+}
+
+function tokenHTML(t){
+ return `<div class="token">
+ <strong>Token #${String(t.token_number).padStart(3,"0")}</strong><br>
+ Token Code: ${escapeHTML(t.token_code||"")}<br>
+ Buyer ID: ${escapeHTML(t.buyer_public_id||"Not Assigned")}<br>
+ Buyer Name: ${escapeHTML(t.buyer_name||"Not Assigned")}<br>
+ Current Price: ${money(t.current_price)}
  </div>`;
 }
-function login(){
- if(document.getElementById('pin').value==='1234'){
-  document.getElementById('loginBox').classList.add('hidden');
-  document.getElementById('adminPanel').classList.remove('hidden');
-  renderAll();
- }else alert('Incorrect PIN');
-}
-function logout(){
- document.getElementById('adminPanel').classList.add('hidden');
- document.getElementById('loginBox').classList.remove('hidden');
- document.getElementById('pin').value='';
-}
-function savePrice(){
- const p=Number(document.getElementById('priceInput').value);
- if(!Number.isFinite(p)||p<1){alert('Enter a valid price.');return}
- localStorage.setItem(PRICE,String(p));
- updatePriceUI();
- document.getElementById('adminMessage').textContent='Display price updated.';
-}
-function assignToken(){
- const id=cleanID(document.getElementById('tokenInput').value);
- const buyer=document.getElementById('buyerInput').value.trim();
- if(!validID(id)){alert('Token ID must be 001 to 100.');return}
- if(!buyer||buyer.length>60){alert('Enter a Buyer ID / Name.');return}
- saveRecord(id,buyer);
- document.getElementById('adminMessage').textContent='Token '+id+' assigned to '+buyer+'.';
- renderAll();
-}
-function resetToken(){
- const id=cleanID(document.getElementById('tokenInput').value);
- if(!validID(id)){alert('Invalid Token ID.');return}
- saveRecord(id,'');
- document.getElementById('adminMessage').textContent='Token '+id+' reset.';
- renderAll();
-}
-function bulkAssign(){
- const buyer=document.getElementById('bulkBuyer').value.trim();
- const s=Number(document.getElementById('bulkStart').value);
- const e=Number(document.getElementById('bulkEnd').value);
- if(!buyer||buyer.length>60||s<1||e>100||s>e){alert('Check Buyer ID and Token range.');return}
- if(!confirm('Assign '+s+' to '+e+' to '+buyer+'?'))return;
- for(let n=s;n<=e;n++)saveRecord(String(n).padStart(3,'0'),buyer);
- document.getElementById('bulkMessage').textContent=(e-s+1)+' token(s) assigned to '+buyer+'.';
- renderAll();
-}
-function makeQR(){
- if(price()<1000){alert('QR feature unlocks at ₹1000.');return}
- const id=cleanID(document.getElementById('qrTokenInput').value);
- if(!validID(id)){alert('Enter a valid Token ID from 001 to 100.');return}
- document.getElementById('qrImage').innerHTML='';
- const url=new URL(location.href);
- url.search='';url.hash='';url.searchParams.set('token',id);
- new QRCode(document.getElementById('qrImage'),{
-  text:url.toString(),width:220,height:220,
-  correctLevel:QRCode.CorrectLevel.H
- });
-}
-function downloadQR(){
- const box=document.getElementById('qrImage');
- const canvas=box.querySelector('canvas');
- const img=box.querySelector('img');
- let url='';
- if(canvas)url=canvas.toDataURL('image/png');
- else if(img)url=img.src;
- else{alert('Generate QR first.');return}
- const a=document.createElement('a');
- a.href=url;
- a.download='QZIX-COIN-QR.png';
- a.click();
-}
-function backup(){
- const data={
-  app:'QZIX COIN',
-  records:getRecords(),
-  price:price(),
-  history:getHistory()
- };
- const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
- const url=URL.createObjectURL(blob);
- const a=document.createElement('a');
- a.href=url;a.download='QZIX-COIN-backup.json';a.click();
- URL.revokeObjectURL(url);
-}
-async function restore(){
- const file=document.getElementById('restoreFile').files[0];
- if(!file){alert('Select a backup JSON file.');return}
- try{
-  const d=JSON.parse(await file.text());
-  if(d.app!=='QZIX COIN'||!d.records||!Array.isArray(d.history))throw Error();
-  localStorage.setItem(KEY,JSON.stringify(d.records));
-  localStorage.setItem(PRICE,String(d.price||1));
-  localStorage.setItem(HIST,JSON.stringify(d.history));
-  renderAll();
-  alert('Backup restored.');
- }catch(e){alert('Invalid QZIX backup file.')}
+
+function escapeHTML(v){
+ return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 }
 
-renderAll();
-const params=new URLSearchParams(location.search);
-const token=params.get('token');
-if(token){
- document.getElementById('publicSearch').value=token;
- publicSearch();
+async function searchTokens(){
+ const q=document.getElementById("search").value.trim();
+ if(!q){msg("Enter a Token ID or Buyer ID");return;}
+ const {data,error}=await db.rpc("qzix_public_search",{p_query:q});
+ if(error){msg(error.message);return;}
+ document.getElementById("searchResults").innerHTML=data.length?
+ data.map(t=>tokenHTML(t)).join(""):"No matching token found.";
 }
+
+async function login(){
+ const email=document.getElementById("email").value.trim();
+ const password=document.getElementById("password").value;
+ const {data,error}=await db.auth.signInWithPassword({email,password});
+ if(error){msg("Login failed: "+error.message);return;}
+ currentUser=data.user;
+ await checkAdmin();
+ await updateUserStatus();
+ msg("Login successful");
+}
+
+async function signup(){
+ const email=document.getElementById("email").value.trim();
+ const password=document.getElementById("password").value;
+ if(password.length<6){msg("Password must be at least 6 characters");return;}
+ const {data,error}=await db.auth.signUp({email,password});
+ if(error){msg("Signup failed: "+error.message);return;}
+ msg("Account created. Check your email if confirmation is required, then login.");
+}
+
+async function logout(){
+ await db.auth.signOut();
+ currentUser=null;isAdmin=false;
+ document.getElementById("adminStatus").textContent="Admin not verified";
+ await updateUserStatus();
+ msg("Logged out");
+}
+
+async function updateUserStatus(){
+ document.getElementById("userStatus").textContent=currentUser?
+ "Logged in · Account ID: "+currentUser.id:"Not logged in";
+}
+
+async function checkAdmin(){
+ isAdmin=false;
+ document.getElementById("adminStatus").textContent="Admin not verified";
+ if(!currentUser)return;
+ const {data,error}=await db.from("qzix_v2_admins")
+ .select("user_id").eq("user_id",currentUser.id).maybeSingle();
+ if(!error && data){
+  isAdmin=true;
+  document.getElementById("adminStatus").textContent="Admin verified";
+ }
+}
+
+async function saveProfile(){
+ if(!currentUser){msg("Please login first");return;}
+ const publicId=document.getElementById("publicId").value.trim();
+ const name=document.getElementById("displayName").value.trim();
+ const {error}=await db.rpc("qzix_save_profile",{
+  p_public_id:publicId,p_display_name:name
+ });
+ if(error){msg("Profile error: "+error.message);return;}
+ msg("Buyer profile saved");
+ await loadTokens();
+}
+
+async function assignToken(){
+ if(!currentUser || !isAdmin){msg("Admin login required");return;}
+ const number=Number(document.getElementById("assignToken").value);
+ const owner=document.getElementById("ownerUUID").value.trim();
+ if(!Number.isInteger(number)||number<1||number>100){msg("Token number must be 1 to 100");return;}
+ if(!owner){msg("Enter buyer account UUID");return;}
+ const {error}=await db.rpc("qzix_admin_assign_token",{
+  p_token_number:number,p_owner_id:owner
+ });
+ if(error){msg("Assignment failed: "+error.message);return;}
+ msg("Token assigned successfully");
+ await loadTokens();
+}
+
+async function setPrice(){
+ if(!currentUser || !isAdmin){msg("Admin login required");return;}
+ const price=Number(document.getElementById("newPrice").value);
+ if(!Number.isFinite(price)||price<1||price>1000000){msg("Enter a valid price");return;}
+ const {error}=await db.rpc("qzix_admin_set_price",{p_price:price});
+ if(error){msg("Price update failed: "+error.message);return;}
+ msg("Market price updated");
+ await loadMarket();
+}
+
+function makeQR(){
+ if(marketPrice<1000){msg("QR is locked until ₹1000");return;}
+ const n=document.getElementById("qrToken").value.trim();
+ if(!/^\d{1,3}$/.test(n)||Number(n)<1||Number(n)>100){msg("Enter token number 001 to 100");return;}
+ const id=String(Number(n)).padStart(3,"0");
+ const url=location.origin+location.pathname+"?token="+id;
+ document.getElementById("qrcode").innerHTML="";
+ new QRCode(document.getElementById("qrcode"),{text:url,width:190,height:190});
+}
+
+function downloadQR(){
+ const box=document.getElementById("qrcode");
+ const img=box.querySelector("img");
+ const canvas=box.querySelector("canvas");
+ const src=img?img.src:(canvas?canvas.toDataURL("image/png"):null);
+ if(!src){msg("Generate QR first");return;}
+ const a=document.createElement("a");
+ a.href=src;a.download="QZIX-COIN-QR.png";a.click();
+}
+
+db.auth.onAuthStateChange(async(event,session)=>{
+ currentUser=session?.user||null;
+ await updateUserStatus();
+ if(currentUser) await checkAdmin();
+ else{
+  isAdmin=false;
+  document.getElementById("adminStatus").textContent="Admin not verified";
+ }
+});
+
+async function start(){
+ const {data}=await db.auth.getSession();
+ currentUser=data.session?.user||null;
+ await updateUserStatus();
+ if(currentUser) await checkAdmin();
+ await loadMarket();
+ const token=new URLSearchParams(location.search).get("token");
+ if(token){
+  document.getElementById("search").value=token;
+  await searchTokens();
+ }
+}
+start();
 </script>
 </body>
 </html>
