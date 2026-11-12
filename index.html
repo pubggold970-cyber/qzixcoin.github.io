@@ -1,58 +1,76 @@
 
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>QZIX COIN</title>
 <style>
+*{box-sizing:border-box}
 body{margin:0;background:#071426;color:#edf4ff;font:16px Arial;padding:20px}
-.card{background:#10213a;padding:20px;border-radius:15px;margin:15px auto;max-width:500px}
-input,button{padding:12px;border-radius:8px;margin:5px;border:1px solid #456;color:#fff;background:#09182a}
-button{background:#66d9c3;color:#06221f;font-weight:bold}
-#qrImage{background:white;padding:15px;display:inline-block;border-radius:10px;min-width:320px;min-height:320px}
-#qrImage canvas,#qrImage img{width:320px!important;height:320px!important}
+main{max-width:600px;margin:auto}
+.card{background:#10213a;border:1px solid #294361;border-radius:15px;padding:20px;margin:15px 0}
+input,button{padding:13px;border-radius:9px;border:1px solid #456;font-size:16px;margin:5px 0}
+input{background:#09182a;color:white;width:100%}
+button{background:#66d9c3;color:#06221f;font-weight:bold;cursor:pointer}
+#qrImage{background:#fff;padding:24px;border:4px solid white;border-radius:8px;width:max-content;max-width:100%;margin:15px auto;min-height:0}
+#qrImage img,#qrImage canvas{display:block;max-width:100%;height:auto}
+#result{overflow-wrap:anywhere}
+.muted{color:#a9bad0;font-size:13px}
 </style>
 </head>
 <body>
+<main>
 <h1>QZIX COIN</h1>
+<p class="muted">100 Fixed Digital Token Demo</p>
+
 <div class="card">
-<h2>QR Token Generator</h2>
+<h2>Generate Token QR</h2>
 <input id="tokenId" value="001" maxlength="3" inputmode="numeric">
 <button id="generate">Generate QR</button>
 <div id="qrImage"></div>
-<p id="qrMessage"></p>
-<button id="download">Download QR</button>
+<p id="message" class="muted"></p>
+<button id="download">Download QR PNG</button>
 </div>
+
 <div class="card">
 <h2>Token Verification</h2>
-<input id="verifyId" placeholder="Enter Token ID" maxlength="3">
+<input id="verifyId" placeholder="Enter Token ID 001–100" maxlength="3">
 <button id="verify">Verify Token</button>
 <div id="result"></div>
 </div>
 
+<div class="card">
+<h2>Token Register</h2>
+<p>Total Supply: 100</p>
+<div id="tokenList"></div>
+</div>
+
+<p class="muted">Demo only. This page does not establish legal ownership, payments or investment rights.</p>
+</main>
+
 <script>
-const baseURL="https://pubggold970-cyber.github.io/qzixcoin.github.io/";
+const SITE="https://pubggold970-cyber.github.io/qzixcoin.github.io/";
+const qrBox=document.getElementById("qrImage");
+const message=document.getElementById("message");
 
-function cleanId(v){
- return String(v).trim().replace(/\D/g,"").padStart(3,"0");
+function cleanID(v){
+ let n=String(v).trim().replace(/\D/g,"");
+ return n.padStart(3,"0");
 }
-
-function validId(id){
- return /^[0-9]{3}$/.test(id) && Number(id)>=1 && Number(id)<=100;
+function validID(id){
+ return /^\d{3}$/.test(id)&&Number(id)>=1&&Number(id)<=100;
 }
-
-function tokenURL(id){
- return baseURL+"?token="+encodeURIComponent(id);
+function makeURL(id){
+ return SITE+"?token="+id;
 }
-
 function verifyToken(id){
- const result=document.getElementById("result");
- if(!validId(id)){
-  result.textContent="Invalid Token ID. Use 001 to 100.";
+ const out=document.getElementById("result");
+ out.innerHTML="";
+ if(!validID(id)){
+  out.textContent="Invalid Token. Use ID 001 to 100.";
   return;
  }
- result.innerHTML="";
  const h=document.createElement("h3");
  h.textContent="✓ QZIX COIN Demo Record Found";
  const p=document.createElement("p");
@@ -60,11 +78,20 @@ function verifyToken(id){
  const s=document.createElement("p");
  s.textContent="Status: Demo Record";
  const note=document.createElement("p");
- note.textContent="Legal ownership is not established. Demo only.";
- result.append(h,p,s,note);
+ note.textContent="Legal ownership not established. Trading inactive.";
+ out.append(h,p,s,note);
 }
 
-async function loadQRLibrary(){
+function loadScript(url){
+ return new Promise((resolve,reject)=>{
+  const s=document.createElement("script");
+  s.src=url;
+  s.onload=resolve;
+  s.onerror=reject;
+  document.head.appendChild(s);
+ });
+}
+async function ensureQR(){
  if(window.QRCode)return true;
  const urls=[
  "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js",
@@ -72,74 +99,79 @@ async function loadQRLibrary(){
  ];
  for(const url of urls){
   try{
-   await new Promise((resolve,reject)=>{
-    const script=document.createElement("script");
-    script.src=url;
-    script.onload=resolve;
-    script.onerror=reject;
-    document.head.appendChild(script);
-   });
+   await loadScript(url);
    if(window.QRCode)return true;
   }catch(e){}
  }
  return false;
 }
-
 async function generateQR(){
- const id=cleanId(document.getElementById("tokenId").value);
- const box=document.getElementById("qrImage");
- const msg=document.getElementById("qrMessage");
- box.innerHTML="";
- if(!validId(id)){
-  msg.textContent="Enter Token ID from 001 to 100.";
+ const id=cleanID(document.getElementById("tokenId").value);
+ document.getElementById("tokenId").value=id;
+ qrBox.innerHTML="";
+ if(!validID(id)){
+  message.textContent="Enter a valid ID from 001 to 100.";
   return;
  }
- msg.textContent="Loading QR...";
- const loaded=await loadQRLibrary();
- if(!loaded){
-  msg.textContent="QR library failed to load. Check internet and retry.";
+ message.textContent="Creating QR...";
+ if(!await ensureQR()){
+  message.textContent="Internet connection required to load QR generator.";
   return;
  }
- new QRCode(box,{
-  text:tokenURL(id),
-  width:320,
-  height:320,
+ new QRCode(qrBox,{
+  text:makeURL(id),
+  width:400,
+  height:400,
   colorDark:"#000000",
   colorLight:"#ffffff",
   correctLevel:QRCode.CorrectLevel.H
  });
- msg.textContent="QR ready. Scan with Google Lens.";
- document.getElementById("tokenId").value=id;
+ message.textContent="QR created. Scan using Google Lens.";
 }
+document.getElementById("generate").onclick=generateQR;
 
-document.getElementById("generate").addEventListener("click",generateQR);
-
-document.getElementById("download").addEventListener("click",()=>{
- const canvas=document.querySelector("#qrImage canvas");
- const msg=document.getElementById("qrMessage");
- if(!canvas){
-  msg.textContent="Generate QR first.";
+document.getElementById("download").onclick=()=>{
+ const canvas=qrBox.querySelector("canvas");
+ const img=qrBox.querySelector("img");
+ let url="";
+ if(canvas){
+  url=canvas.toDataURL("image/png");
+ }else if(img){
+  url=img.src;
+ }
+ if(!url){
+  message.textContent="Generate QR first.";
   return;
  }
- try{
-  const link=document.createElement("a");
-  link.href=canvas.toDataURL("image/png");
-  link.download="QZIX-COIN-"+cleanId(document.getElementById("tokenId").value)+".png";
-  link.click();
-  msg.textContent="QR download requested.";
- }catch(e){
-  msg.textContent="Download failed. Long press QR image to save.";
- }
-});
+ const a=document.createElement("a");
+ a.href=url;
+ a.download="QZIX-COIN-"+cleanID(document.getElementById("tokenId").value)+".png";
+ document.body.appendChild(a);
+ a.click();
+ a.remove();
+ message.textContent="Download requested. Check Downloads.";
+};
 
-document.getElementById("verify").addEventListener("click",()=>{
- verifyToken(cleanId(document.getElementById("verifyId").value));
-});
+document.getElementById("verify").onclick=()=>{
+ verifyToken(cleanID(document.getElementById("verifyId").value));
+};
 
-const params=new URLSearchParams(location.search);
-const incoming=params.get("token");
+const list=document.getElementById("tokenList");
+for(let i=1;i<=100;i++){
+ const id=String(i).padStart(3,"0");
+ const b=document.createElement("button");
+ b.textContent="Token "+id;
+ b.onclick=()=>{
+  document.getElementById("tokenId").value=id;
+  generateQR();
+  window.scrollTo({top:0,behavior:"smooth"});
+ };
+ list.appendChild(b);
+}
+
+const incoming=new URLSearchParams(location.search).get("token");
 if(incoming){
- const id=cleanId(incoming);
+ const id=cleanID(incoming);
  document.getElementById("verifyId").value=id;
  verifyToken(id);
 }else{
