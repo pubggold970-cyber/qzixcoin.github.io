@@ -65,7 +65,7 @@ footer{border-top:1px solid var(--line);padding:20px 0 35px;color:var(--muted);f
     <div class="card">
       <div class="grid">
         <div><div id="qrImage" class="qrbox"></div><p class="muted small">Scan this QR code to open this token's verification page.</p></div>
-        <div><div class="tokenid" id="qrTokenId"></div><p><b>Project:</b> QZIX COIN</p><p><b>Symbol:</b> QZIX</p><p><b>Status:</b> Demo Record</p><p><b>Ownership:</b> Not established</p><p><b>Trading:</b> Inactive</p><button class="primary" id="downloadQR">Download QR Image</button></div>
+        <div><div class="tokenid" id="qrTokenId"></div><p><b>Project:</b> QZIX COIN</p><p><b>Symbol:</b> QZIX</p><p><b>Status:</b> Demo Record</p><p><b>Ownership:</b> Not established</p><p><b>Trading:</b> Inactive</p><button class="primary" id="downloadQR">Download QR Image</button><p id="qrDownloadMessage" class="muted small" aria-live="polite"></p></div>
       </div>
       <p class="muted small" id="qrLink"></p>
     </div>
@@ -180,11 +180,33 @@ rows.addEventListener('click',e=>{
 search.addEventListener('input',()=>renderRows(search.value));
 document.getElementById('showAll').addEventListener('click',()=>{search.value='';renderRows();});
 document.getElementById('closeQR').addEventListener('click',()=>document.getElementById('qrSection').classList.add('hidden'));
-document.getElementById('downloadQR').addEventListener('click',()=>{
-  const img=document.querySelector('#qrImage img');const canvas=document.querySelector('#qrImage canvas');
-  const data=img?img.src:(canvas?canvas.toDataURL('image/png'):null);
-  if(!data){alert('QR image is not ready yet.');return;}
-  const a=document.createElement('a');a.href=data;a.download='QZIX-COIN-Token-'+document.getElementById('qrTokenId').textContent.slice(-3)+'.png';a.click();
+document.getElementById('downloadQR').addEventListener('click',async()=>{
+  const box=document.getElementById('qrImage');
+  const img=box.querySelector('img');
+  const canvas=box.querySelector('canvas');
+  const id=document.getElementById('qrTokenId').textContent.slice(-3);
+  const message=document.getElementById('qrDownloadMessage');
+  let dataUrl='';
+  try{
+    if(canvas) dataUrl=canvas.toDataURL('image/png');
+    else if(img){
+      if(!img.complete) await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=reject;});
+      const c=document.createElement('canvas');c.width=img.naturalWidth||200;c.height=img.naturalHeight||200;
+      c.getContext('2d').drawImage(img,0,0);dataUrl=c.toDataURL('image/png');
+    }
+    if(!dataUrl) throw new Error('QR not ready');
+    const response=await fetch(dataUrl);
+    const blob=await response.blob();
+    const objectUrl=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=objectUrl;a.download='QZIX-COIN-Token-'+id+'.png';
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(objectUrl),5000);
+    message.textContent='Download started. Check your phone Downloads folder. If it does not appear, long-press the QR image and choose Save image.';
+    message.style.color='var(--accent)';
+  }catch(err){
+    if(img && img.src){window.open(img.src,'_blank');message.textContent='QR image opened in a new tab. Long-press the image and choose Download or Save image.';}
+    else {message.textContent='QR image is not ready. Please wait a moment and try again.';message.style.color='var(--danger)';}
+  }
 });
 
 const ADMIN_STORAGE_KEY='qzix_demo_token_records_v1';
