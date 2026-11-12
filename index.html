@@ -102,6 +102,17 @@ footer{border-top:1px solid var(--line);padding:20px 0 35px;color:var(--muted);f
           <p id="saveMessage" class="small" aria-live="polite"></p>
         </div>
         <hr style="border-color:var(--line);margin:22px 0">
+        <section aria-label="Bulk token assignment">
+          <div class="sectionhead"><div><h2>Bulk Token Assignment</h2><p class="muted small">Assign a range of tokens to one Buyer ID in one step.</p></div></div>
+          <div class="grid">
+            <div><label for="bulkBuyer">Buyer ID</label><input id="bulkBuyer" maxlength="40" placeholder="e.g. MEMBER-001" style="display:block;width:100%;margin-top:7px;background:#09182a;border:1px solid var(--line);border-radius:10px;color:white;padding:12px;font:inherit"></div>
+            <div><label for="bulkStart">Start Token ID</label><input id="bulkStart" inputmode="numeric" maxlength="3" value="001" style="display:block;width:100%;margin-top:7px;background:#09182a;border:1px solid var(--line);border-radius:10px;color:white;padding:12px;font:inherit"></div>
+            <div><label for="bulkEnd">End Token ID</label><input id="bulkEnd" inputmode="numeric" maxlength="3" value="100" style="display:block;width:100%;margin-top:7px;background:#09182a;border:1px solid var(--line);border-radius:10px;color:white;padding:12px;font:inherit"></div>
+          </div>
+          <div class="field"><button class="primary" id="bulkAssignBtn">Assign Selected Tokens</button></div>
+          <p id="bulkMessage" class="small" aria-live="polite"></p>
+        </section>
+        <hr style="border-color:var(--line);margin:22px 0">
         <section aria-label="Buyer holdings">
           <div class="sectionhead"><div><h2>Buyer Holdings</h2><p class="muted small">Same Buyer ID may own multiple token records.</p></div><button id="refreshHoldings">Refresh</button></div>
           <div class="tablebox"><table><thead><tr><th>Buyer ID</th><th>Token IDs</th><th>Total</th></tr></thead><tbody id="holdingsRows"><tr><td colspan="3" class="muted">No assigned demo records.</td></tr></tbody></table></div>
@@ -261,6 +272,41 @@ document.getElementById('resetAdminRecord').addEventListener('click',()=>{
   document.getElementById('saveMessage').textContent='Demo record reset on this device.';
   document.getElementById('saveMessage').style.color='var(--accent)';
   renderRows();refreshAdminViews();
+});
+document.getElementById('bulkAssignBtn').addEventListener('click',()=>{
+  const buyer=document.getElementById('bulkBuyer').value.trim();
+  const startRaw=document.getElementById('bulkStart').value.trim();
+  const endRaw=document.getElementById('bulkEnd').value.trim();
+  const msg=document.getElementById('bulkMessage');
+  msg.style.color='var(--danger)';
+  if(!buyer || buyer.length>40){msg.textContent='Enter a Buyer ID from 1 to 40 characters.';return;}
+  if(!/^\d{1,3}$/.test(startRaw) || !/^\d{1,3}$/.test(endRaw)){
+    msg.textContent='Enter numeric Token IDs from 001 to 100.';return;
+  }
+  const start=Number(startRaw),end=Number(endRaw);
+  if(start<1 || end>100 || start>end){msg.textContent='Invalid range. Use 001 to 100, with Start ID not greater than End ID.';return;}
+  const selected=ids.filter(id=>Number(id)>=start && Number(id)<=end);
+  const conflicts=selected.filter(id=>{
+    const rec=getAdminRecord(id);
+    return rec.status==='Assigned (Demo)' && String(rec.ownerRef||'').trim()!==buyer;
+  });
+  if(conflicts.length && !confirm(conflicts.length+' selected token(s) are assigned to another Buyer ID. Replace those demo assignments with '+buyer+'?')) return;
+  selected.forEach(id=>{
+    const previous=getAdminRecord(id);
+    if(previous.status!=='Assigned (Demo)' || String(previous.ownerRef||'').trim()!==buyer){
+      saveAdminRecord(id,{status:'Assigned (Demo)',ownerRef:buyer});
+      addHistory(id,previous.ownerRef||'',buyer,'Bulk assigned/updated');
+    }
+  });
+  msg.style.color='var(--accent)';
+  msg.textContent=selected.length+' token(s) assigned to Buyer ID '+buyer+'.';
+  renderRows();refreshAdminViews();
+  const currentId=document.getElementById('adminEditor').dataset.tokenId;
+  if(currentId && selected.includes(currentId)){
+    const current=getAdminRecord(currentId);
+    document.getElementById('ownerStatus').value=current.status;
+    document.getElementById('ownerRef').value=current.ownerRef;
+  }
 });
 document.getElementById('refreshHoldings').addEventListener('click',refreshAdminViews);
 document.getElementById('backupBtn').addEventListener('click',()=>{
