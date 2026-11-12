@@ -1,237 +1,131 @@
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#071426">
-<title>QZIX COIN | Fixed Digital Token</title>
+<title>QZIX COIN | Fixed Digital Token Project</title>
 <style>
-*{box-sizing:border-box}
-body{margin:0;background:#071426;color:#f4f7fb;font-family:Arial,sans-serif}
-header{padding:20px;background:#10213a;border-bottom:1px solid #294563}
-.container{max-width:1000px;margin:auto;padding:16px}
-.logo{font-size:28px;font-weight:bold;color:#e8bd55}
-.tag,.muted,small{color:#aabbd0}
-nav{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
-button{background:#e8bd55;color:#071426;border:0;border-radius:8px;padding:11px 14px;font-weight:bold;cursor:pointer;margin:3px}
-.secondary{background:#1a3453;color:white}
-.card{background:#10213a;border:1px solid #294563;border-radius:13px;padding:18px;margin:14px 0}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
-.stat{background:#142b49;padding:16px;border-radius:10px}
-.stat strong{display:block;font-size:24px;color:#e8bd55;margin-top:8px}
-h2{color:#e8bd55}
-input{width:100%;padding:13px;background:#10213a;color:white;border:1px solid #36516e;border-radius:8px;margin:8px 0}
-table{width:100%;border-collapse:collapse;min-width:470px}
-th,td{text-align:left;padding:11px;border-bottom:1px solid #294563}
-.table-wrap{overflow-x:auto}
-section{margin-top:22px}
-.hidden{display:none}
-footer{text-align:center;padding:25px;color:#91a6bd}
-.qrbox{background:white;padding:15px;display:inline-block;border-radius:10px;margin:12px 0}
-.qrbox img{display:block;width:220px;height:220px}
+:root{--bg:#071426;--panel:#10213a;--panel2:#142b49;--line:#294361;--text:#edf4ff;--muted:#a9bad0;--accent:#66d9c3;--gold:#f2c879;--danger:#ff9a9a}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#071426,#0b1b30 55%,#071426);color:var(--text);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+header{position:sticky;top:0;z-index:5;background:#071426ed;backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.wrap{width:min(1080px,92%);margin:auto}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 0}.brand{font-weight:850;letter-spacing:.08em}.brand small{display:block;color:var(--muted);font-size:10px;letter-spacing:.13em;font-weight:650}
+nav{display:flex;gap:7px;flex-wrap:wrap;padding:0 0 12px}button,a.nav{border:1px solid var(--line);background:#10213a;color:var(--text);border-radius:10px;padding:10px 13px;text-decoration:none;font-weight:650;cursor:pointer}
+button.primary{background:var(--accent);color:#06221f;border-color:var(--accent)}button:hover,a.nav:hover{border-color:var(--accent)}
+main{padding:28px 0 60px}.hero{padding:28px;border:1px solid var(--line);border-radius:20px;background:radial-gradient(circle at 90% 0%,#1a4960 0,transparent 38%),var(--panel);margin-bottom:18px}
+.eyebrow{color:var(--accent);font-size:12px;font-weight:800;letter-spacing:.14em}.hero h1{font-size:clamp(28px,5vw,44px);line-height:1.1;margin:10px 0}.muted{color:var(--muted)}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:22px}.stat,.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:17px}.stat strong{display:block;font-size:26px}.stat span{font-size:12px;color:var(--muted)}
+section{margin-top:20px}.sectionhead{display:flex;align-items:end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}h2{margin:0;font-size:22px}.tools{display:flex;gap:8px;flex-wrap:wrap}.tools input{min-width:190px;flex:1;background:#09182a;border:1px solid var(--line);color:var(--text);padding:11px 12px;border-radius:10px;font:inherit}
+table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:12px 10px;border-bottom:1px solid var(--line)}th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}td{font-size:14px}.tablebox{overflow:auto;border:1px solid var(--line);border-radius:14px;background:var(--panel)}
+.status{color:var(--gold);font-size:12px;font-weight:750}.small{font-size:12px}.result{display:none;margin-top:14px}.result.show{display:block}.verified{color:var(--accent);font-weight:800}.tokenid{font-size:32px;font-weight:850;letter-spacing:.05em}.qrbox{background:white;padding:14px;border-radius:14px;display:inline-block;min-width:230px;min-height:230px}.qrbox canvas,.qrbox img{max-width:100%;height:auto}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.field{display:flex;gap:8px;flex-wrap:wrap}.field input{background:#09182a;border:1px solid var(--line);border-radius:10px;color:white;padding:11px;font:inherit;min-width:120px}
+footer{border-top:1px solid var(--line);padding:20px 0 35px;color:var(--muted);font-size:12px}
+.notice{border:1px solid #7b6336;background:#332a18;color:#ffe3a6;padding:12px 14px;border-radius:12px;font-size:13px;margin-top:14px}
+.hidden{display:none!important}
+@media(max-width:600px){.stats{grid-template-columns:1fr 1fr}.stats .stat:last-child{grid-column:span 2}.hero{padding:21px}.top{align-items:flex-start}.brand{font-size:14px}th,td{padding:10px 8px}}
 </style>
 </head>
 <body>
-<header>
-<div class="container">
-<div class="logo">QZIX COIN</div>
-<div class="tag">FIXED DIGITAL TOKEN PROJECT · ONE SYSTEM. 100 TOKENS.</div>
-<nav>
-<button onclick="show('home')">Home</button>
-<button class="secondary" onclick="show('register')">Token Register</button>
-<button class="secondary" onclick="show('verify')">QR Verification</button>
-<button class="secondary" onclick="show('login')">Demo Login</button>
-<button class="secondary" onclick="show('admin')">Admin Demo</button>
-</nav>
-</div>
-</header>
+<header><div class="wrap">
+  <div class="top"><div class="brand">QZIX COIN<small>FIXED DIGITAL TOKEN PROJECT · ONE SYSTEM. 100 TOKENS.</small></div></div>
+  <nav>
+    <a class="nav" href="#home">Home</a><a class="nav" href="#register">Token Register</a><a class="nav" href="#verify">QR Verification</a>
+  </nav>
+</div></header>
+<main class="wrap" id="home">
+  <div class="hero">
+    <div class="eyebrow">FIXED SUPPLY · DEMO REGISTER</div>
+    <h1>One system.<br>100 fixed tokens.</h1>
+    <p class="muted">A proposed digital token register designed for transparent records and token-ID verification.</p>
+    <div class="stats">
+      <div class="stat"><strong>100</strong><span>Total token records</span></div>
+      <div class="stat"><strong>₹1</strong><span>Illustrative starting display price</span></div>
+      <div class="stat"><strong>001–100</strong><span>Unique token IDs</span></div>
+    </div>
+    <div class="notice">Demo only: no real tokens, ownership, payments, investment, or trading are active.</div>
+  </div>
 
-<main class="container">
-<section id="home">
-<div class="card">
-<h1>Welcome to QZIX COIN</h1>
-<p>A proposed fixed-supply digital token register designed for transparency, organized records and verification.</p>
-<div class="stats">
-<div class="stat">Total Supply<strong>100</strong></div>
-<div class="stat">Display Price<strong>₹1</strong></div>
-<div class="stat">Token IDs<strong>001–100</strong></div>
-<div class="stat">Trading<strong>Inactive</strong></div>
-</div>
-<p class="muted">Informational demonstration only. No real tokens, payments or trading are active.</p>
-<button onclick="show('register')">Explore Tokens</button>
-</div>
-<div class="card">
-<h2>Project Information</h2>
-<p>Project: QZIX COIN</p>
-<p>Symbol: QZIX</p>
-<p>Supply: 100 fixed demo records</p>
-<p>Purpose: Digital token record and QR verification demonstration.</p>
-<p>Ownership: Demo records only; no legal ownership is established.</p>
-<p>Trading: Inactive. No Sell option is available.</p>
-<p>Profit: No guaranteed profit. No returns are promised.</p>
-</div>
-</section>
+  <section id="verify">
+    <div class="sectionhead"><div><div class="eyebrow">TOKEN CHECK</div><h2>QR Verification</h2></div></div>
+    <div class="card">
+      <p class="muted">Enter a Token ID or scan its unique QR code to open this verification page.</p>
+      <div class="field"><input id="verifyInput" inputmode="numeric" maxlength="3" placeholder="e.g. 001" aria-label="Token ID"><button class="primary" id="verifyBtn">Verify Token</button></div>
+      <div class="result" id="verifyResult" aria-live="polite"></div>
+    </div>
+  </section>
 
-<section id="register" class="hidden">
-<div class="card">
-<h2>Token Register</h2>
-<p class="muted">100 fixed demo token records.</p>
-<input id="search" placeholder="Search Token ID e.g. 001" oninput="renderTokens()">
-<div class="table-wrap">
-<table>
-<thead><tr><th>Token ID</th><th>Symbol</th><th>Status</th><th>Action</th></tr></thead>
-<tbody id="tokenRows"></tbody>
-</table>
-</div>
-</div>
-</section>
+  <section id="register">
+    <div class="sectionhead">
+      <div><div class="eyebrow">FIXED TOKEN REGISTER</div><h2>Token Register</h2><p class="muted small">100 fixed demo token records. Each token has its own QR link.</p></div>
+      <div class="tools"><input id="search" placeholder="Search Token ID e.g. 001" aria-label="Search token"><button id="showAll">Show All</button></div>
+    </div>
+    <div class="tablebox"><table><thead><tr><th>Token ID</th><th>Symbol</th><th>Status</th><th>Action</th></tr></thead><tbody id="tokenRows"></tbody></table></div>
+  </section>
 
-<section id="qr" class="hidden">
-<div class="card">
-<h2>Token QR Code</h2>
-<p id="qrTitle">Token ID</p>
-<div class="qrbox"><img id="qrImage" alt="Token QR Code"></div>
-<p class="muted">Scan this QR Code to open the token verification page.</p>
-<button onclick="downloadQR()">Download QR Code</button>
-<button class="secondary" onclick="show('register')">Back to Register</button>
-</div>
-</section>
-
-<section id="verify" class="hidden">
-<div class="card">
-<h2>QR Verification</h2>
-<p>Enter a Token ID to verify its demo record.</p>
-<input id="verifyId" placeholder="Enter ID 001–100">
-<button onclick="verifyToken()">Verify Token</button>
-<div id="verifyResult"></div>
-</div>
-</section>
-
-<section id="login" class="hidden">
-<div class="card">
-<h2>Demo Login / Signup</h2>
-<p class="muted">Visual demonstration only. No real account is created.</p>
-<input id="username" placeholder="Enter username">
-<input id="password" type="password" placeholder="Enter password">
-<button onclick="demoLogin()">Demo Login</button>
-<div id="loginResult"></div>
-</div>
-</section>
-
-<section id="admin" class="hidden">
-<div class="card">
-<h2>Admin Dashboard — Demo</h2>
-<p class="muted">No real admin security or database connection.</p>
-<div class="stats">
-<div class="stat">Total Tokens<strong>100</strong></div>
-<div class="stat">Records<strong>100</strong></div>
-<div class="stat">Trading<strong>Off</strong></div>
-</div>
-</div>
-</section>
+  <section id="qrSection" class="hidden">
+    <div class="sectionhead"><div><div class="eyebrow">UNIQUE QR CODE</div><h2 id="qrTitle">Token QR</h2></div><button id="closeQR">Close</button></div>
+    <div class="card">
+      <div class="grid">
+        <div><div id="qrImage" class="qrbox"></div><p class="muted small">Scan this QR code to open this token's verification page.</p></div>
+        <div><div class="tokenid" id="qrTokenId"></div><p><b>Project:</b> QZIX COIN</p><p><b>Symbol:</b> QZIX</p><p><b>Status:</b> Demo Record</p><p><b>Ownership:</b> Not established</p><p><b>Trading:</b> Inactive</p><button class="primary" id="downloadQR">Download QR Image</button></div>
+      </div>
+      <p class="muted small" id="qrLink"></p>
+    </div>
+  </section>
 </main>
+<footer><div class="wrap">QZIX COIN · Fixed Supply Demo · 2026<br>Illustrative information only. Not an offer to sell investments or financial products. Ownership is not established by this demo record.</div></footer>
 
-<footer>
-QZIX COIN · Fixed Supply Demo · 2026
-<p>Illustrative information only. Not an offer to sell investments or financial products.</p>
-</footer>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
-let currentQR='';
-
-function show(id){
-document.querySelectorAll('main section').forEach(s=>s.classList.add('hidden'));
-document.getElementById(id).classList.remove('hidden');
-if(id==='register')renderTokens();
-window.scrollTo(0,0);
+const ids = Array.from({length:100},(_,i)=>String(i+1).padStart(3,'0'));
+const rows=document.getElementById('tokenRows');
+const search=document.getElementById('search');
+function tokenUrl(id){const u=new URL(window.location.href);u.search='';u.hash='';u.searchParams.set('token',id);return u.toString();}
+function renderRows(filter=''){
+  rows.innerHTML='';
+  const matches=ids.filter(id=>id.includes(filter.trim()));
+  matches.forEach(id=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td><b>${id}</b></td><td>QZIX</td><td><span class="status">Demo Record</span></td><td><button data-qr="${id}">View QR</button> <button data-verify="${id}">Verify</button></td>`;
+    rows.appendChild(tr);
+  });
+  if(!matches.length) rows.innerHTML='<tr><td colspan="4" class="muted">No matching Token ID.</td></tr>';
 }
-
-function renderTokens(){
-let q=(document.getElementById('search').value||'').trim();
-let html='';
-for(let i=1;i<=100;i++){
-let id=String(i).padStart(3,'0');
-if(q&&!id.includes(q))continue;
-html+=`<tr>
-<td>${id}</td><td>QZIX</td><td>Demo Record</td>
-<td><button onclick="viewToken('${id}')">View</button>
-<button class="secondary" onclick="makeQR('${id}')">QR</button></td>
-</tr>`;
+function showVerification(id){
+  const result=document.getElementById('verifyResult');
+  const valid=ids.includes(id);
+  result.className='result show';
+  if(!valid){result.innerHTML='<div class="card"><b style="color:var(--danger)">Token Not Found</b><p class="muted">Enter a valid Token ID from 001 to 100.</p></div>';return;}
+  result.innerHTML=`<div class="card"><div class="verified">✓ Demo Token Verified</div><div class="tokenid">Token ID: ${id}</div><p><b>Project:</b> QZIX COIN</p><p><b>Symbol:</b> QZIX</p><p><b>Status:</b> Demo Record</p><p><b>Ownership:</b> Not established</p><p><b>Trading:</b> Inactive</p><p class="muted small">This confirms only that a demo record exists. It does not prove legal ownership.</p></div>`;
 }
-document.getElementById('tokenRows').innerHTML=html||'<tr><td colspan="4">No token found</td></tr>';
+function normalizeId(v){return String(v||'').trim().padStart(3,'0');}
+function showQR(id){
+  document.getElementById('qrSection').classList.remove('hidden');
+  document.getElementById('qrTitle').textContent='Token '+id+' QR Code';
+  document.getElementById('qrTokenId').textContent='Token ID: '+id;
+  const target=document.getElementById('qrImage');target.innerHTML='';
+  const url=tokenUrl(id);document.getElementById('qrLink').textContent=url;
+  if(typeof QRCode==='undefined'){target.innerHTML='<p style="color:#111">QR generator needs an internet connection. Reload this page when online.</p>';return;}
+  new QRCode(target,{text:url,width:200,height:200,colorDark:'#000000',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});
+  document.getElementById('qrSection').scrollIntoView({behavior:'smooth'});
 }
-
-function viewToken(id){
-show('verify');
-document.getElementById('verifyId').value=id;
-verifyToken();
-}
-
-function makeQR(id){
-let url=new URL(window.location.href);
-url.search='?token='+id;
-url.hash='';
-currentQR=url.href;
-document.getElementById('qrTitle').textContent='QZIX COIN · Token ID '+id;
-document.getElementById('qrImage').src=
-'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data='+encodeURIComponent(currentQR);
-show('qr');
-}
-
-function downloadQR(){
-if(!currentQR)return;
-let a=document.createElement('a');
-a.href=document.getElementById('qrImage').src;
-a.download='QZIX-COIN-QR.png';
-document.body.appendChild(a);
-a.click();
-a.remove();
-}
-
-function verifyToken(){
-let id=document.getElementById('verifyId').value.trim();
-let n=Number(id);
-let result=document.getElementById('verifyResult');
-if(!/^\d{1,3}$/.test(id)||n<1||n>100){
-result.innerHTML='<p>Please enter a valid Token ID from 001 to 100.</p>';
-return;
-}
-id=String(n).padStart(3,'0');
-result.innerHTML=`
-<div class="card">
-<h2>Demo Token Verified</h2>
-<p>Token ID: <b>${id}</b></p>
-<p>Project: QZIX COIN</p>
-<p>Symbol: QZIX</p>
-<p>Status: Demo Record</p>
-<p>Ownership: Not established</p>
-<p>Trading: Inactive</p>
-</div>`;
-}
-
-function demoLogin(){
-let user=document.getElementById('username').value.trim();
-let pass=document.getElementById('password').value;
-let result=document.getElementById('loginResult');
-if(!user||!pass){
-result.textContent='Please enter username and password.';
-return;
-}
-result.textContent='Demo interaction successful for '+user+'. No account or password has been saved.';
-}
-
-function loadQRFromURL(){
-let id=new URLSearchParams(window.location.search).get('token');
-if(id){
-show('verify');
-document.getElementById('verifyId').value=id;
-verifyToken();
-}
-}
-
-renderTokens();
-loadQRFromURL();
+document.getElementById('verifyBtn').addEventListener('click',()=>showVerification(normalizeId(document.getElementById('verifyInput').value)));
+document.getElementById('verifyInput').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('verifyBtn').click();});
+rows.addEventListener('click',e=>{
+  const q=e.target.closest('[data-qr]');const v=e.target.closest('[data-verify]');
+  if(q)showQR(q.dataset.qr);
+  if(v){document.getElementById('verifyInput').value=v.dataset.verify;showVerification(v.dataset.verify);document.getElementById('verify').scrollIntoView({behavior:'smooth'});}
+});
+search.addEventListener('input',()=>renderRows(search.value));
+document.getElementById('showAll').addEventListener('click',()=>{search.value='';renderRows();});
+document.getElementById('closeQR').addEventListener('click',()=>document.getElementById('qrSection').classList.add('hidden'));
+document.getElementById('downloadQR').addEventListener('click',()=>{
+  const img=document.querySelector('#qrImage img');const canvas=document.querySelector('#qrImage canvas');
+  const data=img?img.src:(canvas?canvas.toDataURL('image/png'):null);
+  if(!data){alert('QR image is not ready yet.');return;}
+  const a=document.createElement('a');a.href=data;a.download='QZIX-COIN-Token-'+document.getElementById('qrTokenId').textContent.slice(-3)+'.png';a.click();
+});
+renderRows();
+const initial=new URLSearchParams(window.location.search).get('token');
+if(initial){const id=normalizeId(initial);document.getElementById('verifyInput').value=id;showVerification(id);document.getElementById('verify').scrollIntoView();}
 </script>
 </body>
 </html>
