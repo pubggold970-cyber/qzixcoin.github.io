@@ -1,237 +1,42 @@
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>QZIX COIN</title>
-<style>
-*{box-sizing:border-box}
-body{margin:0;background:#071426;color:#edf4ff;font:16px Arial}
-header,main,footer{padding:18px;max-width:950px;margin:auto}
-header{border-bottom:1px solid #294361}
-h1{color:#66d9c3}
-h2{font-size:21px}
-nav{display:flex;gap:8px;flex-wrap:wrap;margin-top:15px}
-a,button{background:#142b49;color:white;padding:11px;border:1px solid #36516e;border-radius:8px;text-decoration:none;cursor:pointer}
-button.primary{background:#66d9c3;color:#071426}
-.card{background:#10213a;border:1px solid #294361;border-radius:13px;padding:17px;margin:15px 0}
-input,select{background:#071426;color:white;padding:12px;border:1px solid #36516e;border-radius:8px;margin:5px;max-width:100%}
-table{width:100%;border-collapse:collapse}
-td,th{text-align:left;padding:10px;border-bottom:1px solid #294361}
-.small{color:#a9bad0;font-size:13px}
-.good{color:#66d9c3}
-.warning{color:#f2c879}
-.qr{background:white;padding:12px;display:inline-block;margin:10px}
-.hidden{display:none}
-</style>
-</head>
-<body>
-<header>
-<h1>QZIX COIN</h1>
-<p>FIXED DIGITAL TOKEN PROJECT · ONE SYSTEM. 100 TOKENS.</p>
-<nav>
-<a href="#home">Home</a>
-<a href="#register">Token Register</a>
-<a href="#verify">QR Verification</a>
-<a href="#admin">Admin Demo</a>
-</nav>
-</header>
-
-<main id="home">
-<div class="card">
-<h2>One system. 100 fixed tokens.</h2>
-<p>Total Supply: <b>100</b></p>
-<p>Starting Display Price: ₹1</p>
-<p>Token IDs: 001–100</p>
-<p class="warning">Demo only. No real tokens, payments, ownership or trading are active.</p>
-</div>
-
-<section id="verify" class="card">
-<h2>QR Verification</h2>
-<p class="small">Enter Token ID to verify its demo record.</p>
-<input id="vid" placeholder="001" maxlength="3">
-<button class="primary" onclick="verify()">Verify Token</button>
-<div id="result"></div>
-</section>
-
-<section id="register" class="card">
-<h2>Token Register</h2>
-<input id="search" placeholder="Search Token ID" oninput="render()">
-<div style="overflow-x:auto">
-<table>
-<thead><tr><th>Token ID</th><th>Symbol</th><th>Status</th><th>Action</th></tr></thead>
-<tbody id="rows"></tbody>
-</table>
-</div>
-</section>
-
-<section id="qrsection" class="card hidden">
-<h2 id="qrtitle">Token QR</h2>
-<div id="qrcode" class="qr"></div>
-<p id="qrurl" class="small"></p>
-<button onclick="downloadQR()">Download QR</button>
-</section>
-
-<section id="admin" class="card">
-<h2>Admin Demo</h2>
-<div id="login">
-<p class="small">Enter Admin Demo PIN</p>
-<input id="pin" type="password" placeholder="Demo PIN">
-<button class="primary" onclick="login()">Demo Login</button>
-<p class="small">Demo PIN: 1234</p>
-<p id="loginmsg"></p>
-</div>
-
-<div id="panel" class="hidden">
-<p class="good">Admin Demo Session Active</p>
-<button onclick="logout()">Log Out</button>
-<hr>
-<h3>Manage Token Record</h3>
-<input id="aid" placeholder="Token ID e.g. 001" maxlength="3">
-<button onclick="loadToken()">Load Token</button>
-<div id="editor" class="hidden">
-<h3 id="editTitle"></h3>
-<p class="small">Record Status</p>
-<select id="status">
-<option>Unassigned</option>
-<option>Assigned (Demo)</option>
-<option>Under Review (Demo)</option>
-<option>Disabled (Demo)</option>
-</select>
-<p class="small">Owner Reference (no personal details)</p>
-<input id="owner" placeholder="MEMBER-001" maxlength="40">
-<br>
-<button class="primary" onclick="saveRecord()">Save Demo Record</button>
-<button onclick="resetRecord()">Reset Record</button>
-<p id="savemsg" class="good"></p>
-</div>
-</div>
-<p class="small warning">This is a local demo only. PIN is not secure. Records are saved only in this browser and do not sync to other devices. It does not establish legal ownership.</p>
-</section>
-</main>
-
-<footer class="small">
-QZIX COIN · Fixed Supply Demo · 2026
-<p>Illustrative information only. Not an offer to sell investments or financial products.</p>
-</footer>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script>
-const ids=Array.from({length:100},(_,i)=>String(i+1).padStart(3,'0'));
-const KEY='qzix_admin_demo_records';
-let records={};
-try{records=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){records={}}
-
-function record(id){
-return records[id]||{status:'Demo Record',owner:''};
+function escapeHTML(value){
+  return String(value || '').replace(/[&<>"']/g, c => ({
+    '&':'&amp;',
+    '<':'&lt;',
+    '>':'&gt;',
+    '"':'&quot;',
+    "'":'&#39;'
+  }[c]));
 }
-function render(){
-let f=document.getElementById('search').value.trim();
-document.getElementById('rows').innerHTML=ids.filter(id=>id.includes(f)).map(id=>
-`<tr><td>${id}</td><td>QZIX</td><td>${record(id).status}</td>
-<td><button onclick="showQR('${id}')">View QR</button>
-<button onclick="quickVerify('${id}')">Verify</button></td></tr>`
-).join('');
-}
-function normalize(v){return String(v||'').trim().padStart(3,'0')}
+
 function verify(){
-let id=normalize(document.getElementById('vid').value);
-let r=document.getElementById('result');
-if(!ids.includes(id)){r.innerHTML='<p class="warning">Invalid Token ID. Use 001–100.</p>';return}
-let x=record(id);
-r.innerHTML=`<div class="card"><h3 class="good">✓ Demo Token Verified</h3>
-<h2>Token ID: ${id}</h2>
-<p>Project: QZIX COIN</p>
-<p>Symbol: QZIX</p>
-<p>Status: ${x.status}</p>
-<p>Owner Reference: ${x.owner||'Not entered'}</p>
-<p>Ownership: Not legally established</p>
-<p>Trading: Inactive</p></div>`;
+  let id=normalize(document.getElementById('vid').value);
+  let r=document.getElementById('result');
+
+  if(!ids.includes(id)){
+    r.innerHTML='<p class="warning">Invalid Token ID. Use 001–100.</p>';
+    return;
+  }
+
+  let x=record(id);
+  let params=new URLSearchParams(location.search);
+
+  // Read demo record details embedded in the scanned QR
+  if(params.get('token')===id && params.has('demo_status')){
+    x={
+      status:params.get('demo_status'),
+      owner:params.get('demo_owner') || ''
+    };
+  }
+
+  r.innerHTML=`<div class="card">
+    <h3 class="good">✓ Demo Token Verified</h3>
+    <h2>Token ID: ${id}</h2>
+    <p>Project: QZIX COIN</p>
+    <p>Symbol: QZIX</p>
+    <p>Status: ${escapeHTML(x.status)}</p>
+    <p>Owner Reference: ${escapeHTML(x.owner || 'Not entered')}</p>
+    <p>Ownership: Not legally established</p>
+    <p>Trading: Inactive</p>
+  </div>`;
 }
-function quickVerify(id){
-document.getElementById('vid').value=id;
-verify();
-location.hash='verify';
-}
-function tokenURL(id){
-let u=new URL(location.href);
-u.search='';
-u.hash='';
-u.searchParams.set('token',id);
-return u.href;
-}
-function showQR(id){
-document.getElementById('qrsection').classList.remove('hidden');
-document.getElementById('qrtitle').textContent='Token '+id+' QR Code';
-document.getElementById('qrcode').innerHTML='';
-let url=tokenURL(id);
-document.getElementById('qrurl').textContent=url;
-if(typeof QRCode==='undefined'){
-document.getElementById('qrcode').textContent='QR needs internet connection.';
-return;
-}
-new QRCode(document.getElementById('qrcode'),{
-text:url,width:200,height:200
-});
-location.hash='qrsection';
-}
-function downloadQR(){
-let box=document.querySelector('#qrcode img');
-let canvas=document.querySelector('#qrcode canvas');
-let url=box?box.src:(canvas?canvas.toDataURL():null);
-if(!url){alert('QR not ready.');return}
-let a=document.createElement('a');
-a.href=url;a.download='QZIX-COIN-QR.png';a.click();
-}
-function login(){
-if(document.getElementById('pin').value==='1234'){
-document.getElementById('login').classList.add('hidden');
-document.getElementById('panel').classList.remove('hidden');
-}else document.getElementById('loginmsg').textContent='Incorrect PIN';
-}
-function logout(){
-document.getElementById('panel').classList.add('hidden');
-document.getElementById('login').classList.remove('hidden');
-document.getElementById('pin').value='';
-document.getElementById('editor').classList.add('hidden');
-}
-function loadToken(){
-let id=normalize(document.getElementById('aid').value);
-if(!ids.includes(id)){alert('Enter ID from 001 to 100');return}
-let x=record(id);
-document.getElementById('editTitle').textContent='Token ID: '+id;
-document.getElementById('status').value=x.status==='Demo Record'?'Unassigned':x.status;
-document.getElementById('owner').value=x.owner||'';
-document.getElementById('editor').dataset.id=id;
-document.getElementById('editor').classList.remove('hidden');
-}
-function saveRecord(){
-let id=document.getElementById('editor').dataset.id;
-records[id]={
-status:document.getElementById('status').value,
-owner:document.getElementById('owner').value.trim()
-};
-localStorage.setItem(KEY,JSON.stringify(records));
-document.getElementById('savemsg').textContent='Demo record saved on this device.';
-render();
-}
-function resetRecord(){
-let id=document.getElementById('editor').dataset.id;
-delete records[id];
-localStorage.setItem(KEY,JSON.stringify(records));
-document.getElementById('status').value='Unassigned';
-document.getElementById('owner').value='';
-document.getElementById('savemsg').textContent='Record reset.';
-render();
-}
-render();
-let initial=new URLSearchParams(location.search).get('token');
-if(initial){
-document.getElementById('vid').value=initial;
-verify();
-location.hash='verify';
-}
-</script>
-</body>
-</html>
