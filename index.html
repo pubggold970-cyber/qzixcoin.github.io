@@ -50,6 +50,15 @@ small,.muted{color:#9bb1ca}
 <button onclick="login()">Login</button>
 <button class="secondary" onclick="signup()">Create Account</button>
 <button class="secondary" onclick="logout()">Logout</button>
+<button class="secondary" onclick="sendPasswordReset()">Forgot Password?</button>
+
+<div id="resetBox" class="hidden">
+<hr>
+<h2>Set New Password</h2>
+<input id="newPassword" type="password" placeholder="Enter New Password">
+<button onclick="saveNewPassword()">Set New Password</button>
+</div>
+
 <hr>
 <input id="publicId" placeholder="Your Public Buyer ID">
 <input id="displayName" placeholder="Your Display Name">
@@ -127,7 +136,7 @@ async function loadMarket(){
   document.getElementById("sales").textContent=m.total_sales;
   document.getElementById("qrLocked").classList.toggle("hidden",marketPrice>=1000);
   document.getElementById("qrArea").classList.toggle("hidden",marketPrice<1000);
-  loadTokens();
+  await loadTokens();
  }catch(e){msg("Market error: "+e.message)}
 }
 
@@ -182,10 +191,44 @@ async function signup(){
  msg("Account created. Check your email if confirmation is required, then login.");
 }
 
+async function sendPasswordReset(){
+ const email=document.getElementById("email").value.trim();
+ if(!email){
+  msg("Enter your registered email address first");
+  return;
+ }
+ const redirectTo=location.origin+location.pathname;
+ const {error}=await db.auth.resetPasswordForEmail(email,{redirectTo});
+ if(error){
+  msg("Password reset error: "+error.message);
+  return;
+ }
+ msg("If this email is registered, a password reset link will be sent. Check Inbox and Spam.");
+}
+
+async function saveNewPassword(){
+ const password=document.getElementById("newPassword").value;
+ if(password.length<6){
+  msg("New password must be at least 6 characters");
+  return;
+ }
+ const {error}=await db.auth.updateUser({password});
+ if(error){
+  msg("Password update failed: "+error.message);
+  return;
+ }
+ document.getElementById("resetBox").classList.add("hidden");
+ document.getElementById("newPassword").value="";
+ document.getElementById("password").value="";
+ msg("Password updated. Now login with your new password.");
+}
+
 async function logout(){
  await db.auth.signOut();
- currentUser=null;isAdmin=false;
+ currentUser=null;
+ isAdmin=false;
  document.getElementById("adminStatus").textContent="Admin not verified";
+ document.getElementById("resetBox").classList.add("hidden");
  await updateUserStatus();
  msg("Logged out");
 }
@@ -260,17 +303,27 @@ function downloadQR(){
  const src=img?img.src:(canvas?canvas.toDataURL("image/png"):null);
  if(!src){msg("Generate QR first");return;}
  const a=document.createElement("a");
- a.href=src;a.download="QZIX-COIN-QR.png";a.click();
+ a.href=src;
+ a.download="QZIX-COIN-QR.png";
+ a.click();
 }
 
-db.auth.onAuthStateChange(async(event,session)=>{
+db.auth.onAuthStateChange((event,session)=>{
  currentUser=session?.user||null;
- await updateUserStatus();
- if(currentUser) await checkAdmin();
- else{
-  isAdmin=false;
-  document.getElementById("adminStatus").textContent="Admin not verified";
+
+ if(event==="PASSWORD_RECOVERY"){
+  document.getElementById("resetBox").classList.remove("hidden");
+  msg("Recovery link verified. Enter your new password below.");
  }
+
+ Promise.resolve().then(async()=>{
+  await updateUserStatus();
+  if(currentUser) await checkAdmin();
+  else{
+   isAdmin=false;
+   document.getElementById("adminStatus").textContent="Admin not verified";
+  }
+ });
 });
 
 async function start(){
@@ -279,6 +332,7 @@ async function start(){
  await updateUserStatus();
  if(currentUser) await checkAdmin();
  await loadMarket();
+
  const token=new URLSearchParams(location.search).get("token");
  if(token){
   document.getElementById("search").value=token;
