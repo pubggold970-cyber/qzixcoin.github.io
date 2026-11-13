@@ -1,34 +1,98 @@
-async function assignToken(){
- if(!currentUser || !isAdmin){
-  msg("Admin login required");
-  return;
- }
-
- const number = Number(document.getElementById("assignToken").value);
- const owner = document.getElementById("ownerUUID").value.trim();
-
- if(!Number.isInteger(number) || number < 1 || number > 100){
-  msg("Token number must be 1 to 100");
-  return;
- }
-
- const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
- if(!uuidPattern.test(owner)){
-  msg("Invalid Buyer UUID. Email address nahi, buyer da Supabase Account UUID enter karo.");
-  return;
- }
-
- const {error} = await db.rpc("qzix_admin_assign_token", {
-  p_token_number: number,
-  p_owner_id: owner
- });
-
- if(error){
-  msg("Assignment failed: " + error.message);
-  return;
- }
-
- msg("Token assigned successfully.");
- await loadTokens();
+<!doctype html>
+<html lang="pa">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#071426">
+<title>QZIX COIN | Token Dashboard</title>
+<style>
+:root{--bg:#071426;--panel:#10213a;--panel2:#0b1a2e;--line:#263d5b;--text:#f4f7fb;--muted:#9eb0c8;--gold:#f4c76b;--green:#49d49b;--red:#ff8585}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#173253 0,#071426 48%);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;min-height:100vh}
+.wrap{max-width:1050px;margin:auto;padding:22px 16px 50px}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:25px}.brand{display:flex;align-items:center;gap:12px}.coin{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,#ffe8a5,#b77c22);color:#172238;font-weight:900;font-size:20px;box-shadow:0 0 25px #e9b74b44}.brand h1{font-size:22px;margin:0;letter-spacing:1.5px}.brand small{color:var(--muted)}.tag{border:1px solid #806b3e;color:var(--gold);padding:7px 11px;border-radius:99px;font-size:12px}
+.hero{padding:25px;border:1px solid var(--line);border-radius:22px;background:linear-gradient(120deg,#142c49,#0d1d32);box-shadow:0 15px 45px #0003}.eyebrow{color:var(--gold);font-size:12px;letter-spacing:2px;font-weight:700}.hero h2{font-size:clamp(25px,5vw,38px);margin:9px 0}.hero p{color:var(--muted);margin:0;line-height:1.6}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0 22px}.stat,.panel{background:var(--panel);border:1px solid var(--line);border-radius:17px;padding:17px}.stat span{display:block;color:var(--muted);font-size:12px}.stat strong{display:block;font-size:25px;margin-top:6px}.gold{color:var(--gold)}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.panel h3{margin:0 0 14px;font-size:18px}.muted{color:var(--muted);font-size:13px;line-height:1.55}.field{display:block;margin:12px 0}.field span{display:block;color:var(--muted);font-size:13px;margin-bottom:6px}.field input{width:100%;padding:13px;border:1px solid var(--line);border-radius:10px;background:#071426;color:white;font-size:15px;outline:none}.field input:focus{border-color:var(--gold)}button{border:0;border-radius:10px;padding:12px 16px;font-weight:700;cursor:pointer;background:var(--gold);color:#172238}button.secondary{background:#203b5b;color:white;border:1px solid #3a5677}button:disabled{opacity:.55;cursor:not-allowed}.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}.status{margin-top:12px;font-size:13px;color:var(--muted);min-height:20px}.token-list{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.token{background:var(--panel2);border:1px solid var(--line);padding:10px;border-radius:10px;font-size:12px}.token b{display:block;color:var(--gold);font-size:13px}.notice{margin-top:17px;border:1px solid #725c35;background:#2b2518;color:#f4d99d;border-radius:13px;padding:13px;font-size:12px;line-height:1.6}.footer{text-align:center;color:#7f93ad;font-size:12px;margin-top:24px}.hidden{display:none!important}
+@media(max-width:650px){.stats{grid-template-columns:1fr 1fr}.stats .stat:last-child{grid-column:span 2}.grid{grid-template-columns:1fr}.token-list{grid-template-columns:repeat(3,1fr)}.tag{font-size:10px}.hero{padding:20px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <div class="brand"><div class="coin">Q</div><div><h1>QZIX COIN</h1><small>Fixed Supply Token Project</small></div></div>
+  <div class="tag">100 FIXED TOKENS</div>
+</header>
+<section class="hero">
+  <div class="eyebrow">QZIX DIGITAL TOKEN SYSTEM</div>
+  <h2>Simple. Structured. Transparent.</h2>
+  <p>ਇਹ QZIX COIN ਦਾ ਸ਼ੁਰੂਆਤੀ ਵੈੱਬ ਡੈਸ਼ਬੋਰਡ ਹੈ। ਇੱਥੇ ਕੁੱਲ ਸਪਲਾਈ, ਮੌਜੂਦਾ ਡੈਮੋ ਕੀਮਤ ਅਤੇ ਖਾਤਾ ਲੌਗਇਨ ਵੇਖ ਸਕਦੇ ਹੋ।</p>
+</section>
+<section class="stats">
+  <div class="stat"><span>Current Display Price</span><strong class="gold" id="price">₹1</strong></div>
+  <div class="stat"><span>Total Token Supply</span><strong>100</strong></div>
+  <div class="stat"><span>Token IDs</span><strong style="font-size:19px">001 – 100</strong></div>
+</section>
+<div class="grid">
+  <section class="panel">
+    <h3>Account Login / Sign Up</h3>
+    <p class="muted">ਆਪਣੀ ਈਮੇਲ ਨਾਲ ਖਾਤਾ ਬਣਾਓ ਜਾਂ ਲੌਗਇਨ ਕਰੋ।</p>
+    <label class="field"><span>Email</span><input id="email" type="email" autocomplete="email" placeholder="you@example.com"></label>
+    <label class="field"><span>Password</span><input id="password" type="password" autocomplete="current-password" placeholder="ਘੱਟੋ-ਘੱਟ 6 ਅੱਖਰ"></label>
+    <div class="actions">
+      <button id="signup">Sign Up</button><button class="secondary" id="login">Login</button><button class="secondary hidden" id="logout">Logout</button>
+    </div>
+    <div class="status" id="authStatus">Supabase connection ਲਈ ਹੇਠਾਂ ਦਿੱਤੀ configuration ਭਰਨੀ ਬਾਕੀ ਹੈ।</div>
+    <div class="muted" id="userInfo"></div>
+  </section>
+  <section class="panel">
+    <h3>Market Overview</h3>
+    <p class="muted">ਡੈਸ਼ਬੋਰਡ Supabase ਤੋਂ ਮਾਰਕੀਟ ਦੀ ਜਾਣਕਾਰੀ ਪੜ੍ਹਨ ਦੀ ਕੋਸ਼ਿਸ਼ ਕਰੇਗਾ। ਹੁਣੇ BUY/SELL ਜਾਂ ਪੈਸੇ ਦੀ ਲੈਣ-ਦੇਣ ਚਾਲੂ ਨਹੀਂ ਹੈ।</p>
+    <div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--line)"><span class="muted">Market Level</span><b id="level">—</b></div>
+    <div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--line)"><span class="muted">Sales in Level</span><b id="sales">—</b></div>
+    <div style="display:flex;justify-content:space-between;padding:11px 0"><span class="muted">Total Recorded Sales</span><b id="totalSales">—</b></div>
+    <button class="secondary" id="refresh">Refresh Market</button>
+    <div class="status" id="marketStatus"></div>
+  </section>
+</div>
+<section class="panel" style="margin-top:16px">
+  <h3>100 Unique Token IDs</h3>
+  <p class="muted">ਹਰ ਟੋਕਨ ਦਾ ਆਪਣਾ ਵੱਖਰਾ ID ਹੈ। ਇਹ ਸੂਚੀ ਸਿਰਫ਼ ਪਛਾਣ ਲਈ ਹੈ; ਇਸ ਨਾਲ ਮਾਲਕੀ ਜਾਂ ਖਰੀਦ ਦੀ ਪੁਸ਼ਟੀ ਨਹੀਂ ਹੁੰਦੀ।</p>
+  <div class="token-list" id="tokens"></div>
+</section>
+<div class="notice"><b>Important — Demo Stage:</b> ਇਹ ਸਾਈਟ ਇਸ ਵੇਲੇ ਸਿਰਫ਼ ਫਰੰਟਐਂਡ ਅਤੇ ਲੌਗਇਨ/ਰੀਡ-ਓਨਲੀ ਟੈਸਟ ਲਈ ਹੈ। ਕੋਈ ਅਸਲੀ ਖਰੀਦ, ਵਿਕਰੀ, ਭੁਗਤਾਨ, ਮਾਲਕੀ ਟ੍ਰਾਂਸਫਰ ਜਾਂ ਮੁਨਾਫ਼ੇ ਦੀ ਗਾਰੰਟੀ ਨਹੀਂ। ਅਸਲੀ ਲੈਣ-ਦੇਣ ਤੋਂ ਪਹਿਲਾਂ ਸੁਰੱਖਿਅਤ backend, payment verification, database transaction rules ਅਤੇ ਕਾਨੂੰਨੀ ਜਾਂਚ ਲਾਜ਼ਮੀ ਹੈ। ਆਪਣੀ Supabase service_role/secret key ਕਦੇ ਵੀ ਇਸ ਫਾਈਲ ਵਿੱਚ ਨਾ ਪਾਓ।</div>
+<div class="footer">QZIX COIN • Fixed supply concept • Version 1</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* Add your Supabase Project URL and anon/publishable key here.
+   Never put the service_role or secret key in a public website. */
+const SUPABASE_URL = "https://rxjrsbkqytovjqnijqek.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_La3xzuyCRI96ubrMhQj4XQ_Ofd55K-q";
+const configured = SUPABASE_URL.startsWith("https://") && !SUPABASE_URL.includes("PASTE_") && !SUPABASE_ANON_KEY.includes("PASTE_");
+let supabase = null;
+const $ = id => document.getElementById(id);
+for(let i=1;i<=100;i++){const d=document.createElement("div");d.className="token";d.innerHTML=`<b>QZIX-${String(i).padStart(3,"0")}</b><span>Unique Token ID</span>`;$("tokens").appendChild(d)}
+if(configured && window.supabase){supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);$("authStatus").textContent="Supabase ਨਾਲ ਜੁੜਨ ਲਈ ਤਿਆਰ।";refreshMarket();checkUser()}else{$("marketStatus").textContent="Supabase keys ਜੋੜਨ ਤੋਂ ਬਾਅਦ Market data ਦਿਖੇਗਾ।"}
+async function refreshMarket(){
+ if(!supabase)return;
+ $("marketStatus").textContent="Loading…";
+ const {data,error}=await supabase.from("qzix_v2_market").select("level,sales_in_level,total_sales,current_price").eq("id",1).single();
+ if(error){$("marketStatus").textContent="Market data ਨਹੀਂ ਮਿਲਿਆ: "+error.message;return}
+ $("price").textContent="₹"+data.current_price;$("level").textContent=data.level;$("sales").textContent=data.sales_in_level;$("totalSales").textContent=data.total_sales;$("marketStatus").textContent="Market data updated.";
 }
+async function checkUser(){
+ if(!supabase)return;
+ const {data}=await supabase.auth.getUser();
+ if(data.user){$("userInfo").textContent="Logged in: "+data.user.email;$("logout").classList.remove("hidden")}else{$("userInfo").textContent="ਕੋਈ ਯੂਜ਼ਰ ਲੌਗਇਨ ਨਹੀਂ";$("logout").classList.add("hidden")}
+}
+async function auth(action){
+ if(!supabase){$("authStatus").textContent="ਪਹਿਲਾਂ Supabase URL ਅਤੇ anon key ਫਾਈਲ ਵਿੱਚ ਜੋੜੋ।";return}
+ const email=$("email").value.trim(),password=$("password").value;
+ if(!email||password.length<6){$("authStatus").textContent="ਸਹੀ Email ਅਤੇ ਘੱਟੋ-ਘੱਟ 6 ਅੱਖਰਾਂ ਦਾ Password ਭਰੋ।";return}
+ $("authStatus").textContent="Please wait…";
+ const result=action==="signup"?await supabase.auth.signUp({email,password}):await supabase.auth.signInWithPassword({email,password});
+ $("authStatus").textContent=result.error?result.error.message:(action==="signup"?"Account ਬਣ ਗਿਆ। Email confirmation ਦੀ ਲੋੜ ਹੋ ਸਕਦੀ ਹੈ।":"Login successful.");
+ await checkUser();
+}
+$("signup").onclick=()=>auth("signup");$("login").onclick=()=>auth("login");$("refresh").onclick=refreshMarket;
+$("logout").onclick=async()=>{if(supabase){await supabase.auth.signOut();$("authStatus").textContent="Logged out.";await checkUser()}};
+</script>
+</body>
+</html>
