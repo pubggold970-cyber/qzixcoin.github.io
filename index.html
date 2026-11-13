@@ -77,7 +77,7 @@ hi:{language:"भाषा",fixedTag:"100 निश्चित टोकन",he
 let currentLang="en";
 function tr(key){return translations[currentLang][key]||translations.en[key]||key}
 function applyLanguage(lang){
- currentLang=translations[lang]?lang:"pa";document.documentElement.lang=currentLang;
+ currentLang=translations[lang]?lang:"en";document.documentElement.lang=currentLang;
  const keys=["fixedTag","heroTitle","heroDesc","priceLabel","supplyLabel","tokenIdsLabel","accountTitle","accountDesc","emailLabel","passwordLabel","marketTitle","marketDesc","levelLabel","salesLabel","totalSalesLabel","tokensTitle","tokensDesc","footer"];
  keys.forEach(k=>{const el=$(k);if(el)el.textContent=tr(k)});$("languageLabel").textContent=tr("language");
  $("noticeText").innerHTML=tr("notice");$("signup").textContent=tr("signup");$("login").textContent=tr("login");$("logout").textContent=tr("logout");$("refresh").textContent=tr("refresh");
@@ -86,7 +86,7 @@ function applyLanguage(lang){
  $("language").value=currentLang;
 }
 $("language").addEventListener("change",e=>{applyLanguage(e.target.value);try{localStorage.setItem("qzix-language",e.target.value)}catch(e){}});
-applyLanguage((()=>{try{return localStorage.getItem("qzix-language")||"en"}catch(e){return "pa"}})());
+applyLanguage((()=>{try{const saved=localStorage.getItem("qzix-language");if(saved==="pa"){localStorage.setItem("qzix-language","en");return "en"}return saved||"en"}catch(e){return "en"}})());
 
 for(let i=1;i<=100;i++){const d=document.createElement("div");d.className="token";d.innerHTML=`<b>QZIX-${String(i).padStart(3,"0")}</b><span class="tokenCaption">Unique Token ID</span>`;$("tokens").appendChild(d)}
 if(configured && window.supabase){supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);$("authStatus").textContent=tr("ready");refreshMarket();checkUser()}else{$("marketStatus").textContent=tr("marketUnavailable")}
