@@ -52,10 +52,11 @@ small,.muted{color:#9bb1ca}
 <button class="secondary" onclick="logout()">Logout</button>
 <button class="secondary" onclick="sendPasswordReset()">Forgot Password?</button>
 
-<div id="resetBox" class="hidden">
+<div id="resetBox">
 <hr>
 <h2>Set New Password</h2>
-<input id="newPassword" type="password" placeholder="Enter New Password">
+<p class="muted">After opening the reset email link, enter your new password here.</p>
+<input id="newPassword" type="password" placeholder="Enter New Password (minimum 6 characters)">
 <button onclick="saveNewPassword()">Set New Password</button>
 </div>
 
