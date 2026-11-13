@@ -173,16 +173,17 @@ button.secondary{background:#172b45;border:1px solid #385575;box-shadow:none}
 <div class="footer" id="footerText">QZIX COIN • Fixed supply concept • Version 1</div>
 </div>
 <script>
-window.qzixSupabaseReady=new Promise((resolve,reject)=>{
- const load=(url,fallback)=>{
-  const s=document.createElement("script");s.src=url;s.async=true;
-  const timer=setTimeout(()=>{s.remove();if(fallback)load(fallback,null);else reject(new Error("Supabase SDK CDN timed out"));},12000);
-  s.onload=()=>{clearTimeout(timer);if(window.supabase&&typeof window.supabase.createClient==="function")resolve();else if(fallback)load(fallback,null);else reject(new Error("Supabase SDK loaded without createClient"));};
-  s.onerror=()=>{clearTimeout(timer);s.remove();if(fallback)load(fallback,null);else reject(new Error("Could not load Supabase SDK from either CDN"));};
-  document.head.appendChild(s);
- };
- load("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2","https://unpkg.com/@supabase/supabase-js@2");
-});
+window.qzixSupabaseReady=(async()=>{
+ let lastError;
+ for(const url of ["https://esm.sh/@supabase/supabase-js@2","https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm"]){
+  try{
+   const mod=await import(url);
+   if(typeof mod.createClient==="function"){window.qzixCreateClient=mod.createClient;return true;}
+   lastError=new Error("Module did not export createClient");
+  }catch(e){lastError=e;}
+ }
+ throw lastError||new Error("Supabase SDK could not be imported");
+})();
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
@@ -229,7 +230,7 @@ $("language").addEventListener("change",e=>{applyLanguage(e.target.value);try{lo
 applyLanguage((()=>{try{const saved=localStorage.getItem("qzix-language");if(saved==="pa"){localStorage.setItem("qzix-language","en");return "en"}return saved||"en"}catch(e){return "en"}})());
 
 for(let i=1;i<=100;i++){const d=document.createElement("div");d.className="token";d.innerHTML=`<b>QZIX-${String(i).padStart(3,"0")}</b><span class="tokenCaption">Unique Token ID</span>`;$("tokens").appendChild(d)}
-window.qzixSupabaseReady.then(()=>{if(configured){try{supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);$("authStatus").textContent=tr("ready");refreshMarket();checkUser()}catch(e){$("authStatus").textContent="Supabase client failed to start: "+(e?.message||"Unknown error");$("marketStatus").textContent=tr("marketUnavailable")}}else{$("authStatus").textContent=tr("notConfigured");$("marketStatus").textContent=tr("marketUnavailable")}}).catch(e=>{$("authStatus").textContent="Supabase library could not load: "+(e?.message||"Check internet connection");$("marketStatus").textContent=tr("marketUnavailable")});
+window.qzixSupabaseReady.then(()=>{if(configured){try{supabase=window.qzixCreateClient(SUPABASE_URL,SUPABASE_ANON_KEY);$("authStatus").textContent=tr("ready");refreshMarket();checkUser()}catch(e){$("authStatus").textContent="Supabase client failed to start: "+(e?.message||"Unknown error");$("marketStatus").textContent=tr("marketUnavailable")}}else{$("authStatus").textContent=tr("notConfigured");$("marketStatus").textContent=tr("marketUnavailable")}}).catch(e=>{$("authStatus").textContent="Supabase SDK import failed: "+(e?.message||"Check internet connection or browser support");$("marketStatus").textContent=tr("marketUnavailable")});
 async function refreshMarket(){
  if(!supabase)return;
  $("marketStatus").textContent=tr("marketLoading");
