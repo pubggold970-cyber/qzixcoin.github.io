@@ -9,22 +9,26 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#071426;color:#edf4ff;font:16px Arial;padding:18px}
-main{max-width:650px;margin:auto}
-h1{text-align:center;color:#49d9ff;letter-spacing:2px}
-.card{background:#10213a;border:1px solid #284361;border-radius:14px;padding:17px;margin:14px 0}
+body{margin:0;background:radial-gradient(circle at top,#12345a 0,#071426 48%);color:#edf4ff;font:16px Arial,sans-serif;padding:18px;min-height:100vh}
+main{max-width:760px;margin:auto}
+h1{text-align:center;color:#49d9ff;letter-spacing:3px;font-size:clamp(28px,6vw,42px);margin:12px 0}
 h2{font-size:19px;color:#49d9ff;margin-top:0}
-input,button{width:100%;padding:13px;border-radius:9px;margin:6px 0;font-size:15px}
-input{background:#071426;border:1px solid #35516f;color:white}
-button{background:#08a9d4;color:#001522;border:0;font-weight:bold;cursor:pointer}
-button.secondary{background:#294563;color:white}
+.card{background:linear-gradient(145deg,#102742,#0d1c31);border:1px solid #284361;border-radius:16px;padding:18px;margin:15px 0;box-shadow:0 10px 28px #0003}
+input,button{width:100%;padding:13px;border-radius:10px;margin:6px 0;font-size:15px}
+input{background:#071426;border:1px solid #35516f;color:white;outline:none}
+input:focus{border-color:#49d9ff;box-shadow:0 0 0 2px #49d9ff22}
+button{background:linear-gradient(90deg,#08a9d4,#42d6ee);color:#001522;border:0;font-weight:bold;cursor:pointer}
+button.secondary{background:#294563;color:white;border:1px solid #426383}
+button:hover{filter:brightness(1.08)}
 small,.muted{color:#9bb1ca}
-.price{font-size:36px;color:#51e0a0;font-weight:bold}
-.token{padding:12px;border-bottom:1px solid #29415d}
+.price{font-size:clamp(32px,7vw,42px);color:#51e0a0;font-weight:bold}
+.token{padding:13px;border-bottom:1px solid #29415d;overflow-wrap:anywhere}
 .token strong{color:#52dcff}
-.hidden{display:none}
-#status{padding:10px;color:#ffd47a}
+.hidden{display:none!important}
+#status{padding:12px;color:#ffd47a;line-height:1.5;overflow-wrap:anywhere}
 #qrcode{background:white;padding:12px;display:table;margin:12px auto}
+hr{border:0;border-top:1px solid #29415d;margin:18px 0}
+@media(max-width:480px){body{padding:10px}.card{padding:14px;border-radius:13px}}
 </style>
 </head>
 <body>
@@ -49,6 +53,7 @@ small,.muted{color:#9bb1ca}
 <input id="password" type="password" placeholder="Password">
 <button onclick="login()">Login</button>
 <button class="secondary" onclick="signup()">Create Account</button>
+<button class="secondary" onclick="resendConfirmation()">Resend Confirmation Email</button>
 <button class="secondary" onclick="logout()">Logout</button>
 <button class="secondary" onclick="sendPasswordReset()">Forgot Password?</button>
 
@@ -101,7 +106,7 @@ small,.muted{color:#9bb1ca}
 <button onclick="setPrice()">Update Market Price</button>
 </div>
 
-<div id="status"></div>
+<div id="status" role="status" aria-live="polite"></div>
 <p class="muted" style="text-align:center;font-size:12px">
 QZIX COIN · Fixed supply: 100 · No Sell Option<br>
 Market price changes do not guarantee profit or returns.
@@ -118,7 +123,8 @@ let isAdmin = false;
 let marketPrice = 1;
 
 function msg(t){
- document.getElementById("status").textContent=t;
+ const el=document.getElementById("status");
+ if(el) el.textContent=t;
 }
 
 function money(n){
@@ -173,27 +179,62 @@ async function searchTokens(){
 }
 
 async function login(){
- const email=document.getElementById("email").value.trim();
+ const email=document.getElementById("email").value.trim().toLowerCase();
  const password=document.getElementById("password").value;
+ if(!email || !password){msg("Enter your registered email and password.");return;}
  const {data,error}=await db.auth.signInWithPassword({email,password});
- if(error){msg("Login failed: "+error.message);return;}
+ if(error){
+  const code=String(error.code||"").toLowerCase();
+  if(code.includes("email_not_confirmed") || /email not confirmed/i.test(error.message)){
+   msg("Email not confirmed. Check your inbox, then use Resend Confirmation Email.");
+  }else if(/invalid login credentials/i.test(error.message)){
+   msg("Login failed: email or password is incorrect, or this account has not been created. Try Create Account or Forgot Password.");
+  }else{
+   msg("Login failed: "+error.message);
+  }
+  return;
+ }
  currentUser=data.user;
  await checkAdmin();
  await updateUserStatus();
- msg("Login successful");
+ msg("Login successful.");
 }
 
 async function signup(){
- const email=document.getElementById("email").value.trim();
+ const email=document.getElementById("email").value.trim().toLowerCase();
  const password=document.getElementById("password").value;
- if(password.length<6){msg("Password must be at least 6 characters");return;}
- const {data,error}=await db.auth.signUp({email,password});
+ if(!email){msg("Enter your email address.");return;}
+ if(password.length<6){msg("Password must be at least 6 characters.");return;}
+ const emailRedirectTo=location.origin+location.pathname;
+ const {data,error}=await db.auth.signUp({
+  email,password,
+  options:{emailRedirectTo}
+ });
  if(error){msg("Signup failed: "+error.message);return;}
- msg("Account created. Check your email if confirmation is required, then login.");
+ if(data.session){
+  currentUser=data.user;
+  await checkAdmin();
+  await updateUserStatus();
+  msg("Account created and logged in successfully.");
+ }else{
+  msg("Account request received. Open the confirmation email sent by Supabase, confirm your email, then return here and Login. If no email arrives, check Spam or tap Resend Confirmation Email.");
+ }
+}
+
+async function resendConfirmation(){
+ const email=document.getElementById("email").value.trim().toLowerCase();
+ if(!email){msg("Enter the email address you used to create the account.");return;}
+ const {error}=await db.auth.resend({
+  type:"signup",
+  email,
+  options:{emailRedirectTo:location.origin+location.pathname}
+ });
+ if(error){msg("Could not resend confirmation: "+error.message);return;}
+ msg("If this account needs confirmation, a new confirmation email has been sent. Check Inbox and Spam.");
 }
 
 async function sendPasswordReset(){
- const email=document.getElementById("email").value.trim();
+ const email=document.getElementById("email").value.trim().toLowerCase();
  if(!email){
   msg("Enter your registered email address first");
   return;
@@ -213,6 +254,8 @@ async function saveNewPassword(){
   msg("New password must be at least 6 characters");
   return;
  }
+ const {data:sessionData}=await db.auth.getSession();
+ if(!sessionData.session){msg("Open the password-reset email link on this same website first, then set your new password.");return;}
  const {error}=await db.auth.updateUser({password});
  if(error){
   msg("Password update failed: "+error.message);
