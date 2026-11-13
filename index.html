@@ -150,7 +150,7 @@ button.secondary{background:#172b45;border:1px solid #385575;box-shadow:none}
 <div class="notice" id="noticeText"><b>Important — Demo Stage:</b> Buyer wallet and withdrawal requests are connected. BUY-only manual UPI requests are reviewed by an admin; a typed UTR is not proof of payment. No SELL option and no profit is guaranteed. Token ownership changes only after the admin checks the actual bank/UPI credit. UPI receiving details must be configured before anyone pays. Complete legal review before real transactions. Never put your Supabase service_role/secret key in this file.</div>
 <div class="footer" id="footerText">QZIX COIN • Fixed supply concept • Version 1</div>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2'"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 /* Add your Supabase Project URL and anon/publishable key here.
@@ -182,7 +182,7 @@ $("language").addEventListener("change",e=>{applyLanguage(e.target.value);try{lo
 applyLanguage((()=>{try{const saved=localStorage.getItem("qzix-language");if(saved==="pa"){localStorage.setItem("qzix-language","en");return "en"}return saved||"en"}catch(e){return "en"}})());
 
 for(let i=1;i<=100;i++){const d=document.createElement("div");d.className="token";d.innerHTML=`<b>QZIX-${String(i).padStart(3,"0")}</b><span class="tokenCaption">Unique Token ID</span>`;$("tokens").appendChild(d)}
-if(configured && window.supabase){supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);$("authStatus").textContent=tr("ready");refreshMarket();checkUser()}else{$("authStatus").textContent=tr("notConfigured");$("marketStatus").textContent=tr("marketUnavailable") }
+if(configured && window.supabase && typeof window.supabase.createClient==="function"){try{supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);$("authStatus").textContent=tr("ready");refreshMarket();checkUser()}catch(e){$("authStatus").textContent="Supabase client failed to start: "+(e?.message||"Unknown error");$("marketStatus").textContent=tr("marketUnavailable")}}else{$("authStatus").textContent="Supabase JavaScript library did not load. Refresh the page or check your internet connection."; $("marketStatus").textContent=tr("marketUnavailable") }
 async function refreshMarket(){
  if(!supabase)return;
  $("marketStatus").textContent=tr("marketLoading");
