@@ -70,6 +70,7 @@
   <h3>BUY QZIX COIN — Manual UPI</h3>
   <p class="muted">BUY only. No SELL button. Select a token currently owned by another buyer. The price is locked when your request is submitted.</p>
   <div id="upiInstructions" class="notice" style="margin:12px 0">UPI payment details are not configured yet. Do not send money until the official UPI ID or QR is displayed here.</div>
+  <a id="upiPayNow" class="button secondary hidden" href="#" style="display:inline-block;text-decoration:none;margin:0 0 12px" rel="nofollow">Open UPI App to Pay</a>
   <label class="field"><span>Token ID (currently owned)</span><select id="buyToken"><option value="">Loading available tokens…</option></select></label>
   <div class="muted" id="buyPriceInfo">Current price: loading…</div>
   <label class="field"><span>UPI Transaction Reference / UTR</span><input id="buyerUpiReference" type="text" maxlength="120" placeholder="Enter UPI reference after payment"></label>
@@ -257,7 +258,19 @@ async function refreshBuyTokens(){
  select.innerHTML="<option value=''>Choose a token</option>"+data.map(t=>"<option value='"+Number(t.token_number)+"'>QZIX-"+String(t.token_number).padStart(3,"0")+" · owner "+safeText(t.owner_id.slice(0,8))+"…</option>").join("");
  const {data:market}=await supabase.from("qzix_v2_market").select("current_price").eq("id",1).maybeSingle();
  $("buyPriceInfo").textContent="Current display price: "+money(market?.current_price||0)+" · 20% Company / 80% previous owner after admin approval.";
+ updateUpiPayLink();
 }
+function updateUpiPayLink(){
+ const link=$("upiPayNow");
+ const tokenNumber=Number($("buyToken").value);
+ const priceText=$("buyPriceInfo").textContent.match(/₹\s*[\d,.]+/);
+ const amount=priceText?Number(priceText[0].replace(/[^\d.]/g,"")):0;
+ if(!link||!QZIX_UPI_ID.trim()||!Number.isInteger(tokenNumber)||tokenNumber<1||tokenNumber>100||!Number.isFinite(amount)||amount<=0){link?.classList.add("hidden");return}
+ const params=new URLSearchParams({pa:QZIX_UPI_ID,pn:"QZIX COIN",am:amount.toFixed(2),cu:"INR",tn:"QZIX-"+String(tokenNumber).padStart(3,"0")});
+ link.href="upi://pay?"+params.toString();
+ link.classList.remove("hidden");
+}
+$("buyToken").addEventListener("change",updateUpiPayLink);
 async function submitManualPayment(){
  if(!supabase||!currentQzixUser){$("buyStatus").textContent="Please log in first.";return}
  if(!QZIX_UPI_ID.trim()){$("buyStatus").textContent="UPI details are not configured yet. Do not make a payment. Ask admin to add the official UPI ID first.";return}
