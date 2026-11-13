@@ -336,7 +336,7 @@ const verifyParam=new URLSearchParams(location.search).get("verify");
 if(verifyParam){const tokenNum=Number(verifyParam);if(Number.isInteger(tokenNum)&&tokenNum>=1&&tokenNum<=100){verifyToken(tokenNum)}else{$("verificationPanel").classList.remove("hidden");$("verificationDetails").textContent="Invalid token verification link."}}
 
 
-const QZIX_UPI_ID = "7814244038@ptyes";
+const QZIX_UPI_ID = ""; // Keep payments disabled until company ownership of the official UPI ID is verified.
 function showUpiInstructions(){
  const box=$("upiInstructions");
  if(QZIX_UPI_ID.trim()){
