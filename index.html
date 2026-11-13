@@ -51,6 +51,21 @@
     <div class="status" id="marketStatus"></div>
   </section>
 </div>
+<section class="panel hidden" id="walletPanel" style="margin-top:16px">
+  <h3>My Wallet</h3>
+  <p class="muted">Only confirmed resale proceeds appear here. No profit is guaranteed.</p>
+  <div style="padding:15px;background:#0b1a2e;border:1px solid var(--line);border-radius:12px;margin-bottom:14px">
+    <span class="muted">Available Balance</span>
+    <strong id="walletBalance" class="gold" style="display:block;font-size:28px;margin-top:5px">₹0.00</strong>
+  </div>
+  <label class="field"><span>Withdrawal Amount (₹)</span><input id="withdrawAmount" type="number" min="1" step="0.01" inputmode="decimal" placeholder="Enter amount"></label>
+  <div class="actions"><button id="requestWithdrawal">Request Withdrawal</button><button class="secondary" id="refreshWallet">Refresh Wallet</button></div>
+  <div class="status" id="walletStatus" aria-live="polite"></div>
+  <h3 style="margin-top:18px">Wallet History</h3>
+  <div id="walletHistory" class="muted">Log in to view your wallet history.</div>
+  <h3 style="margin-top:18px">Withdrawal Requests</h3>
+  <div id="withdrawalHistory" class="muted">No requests loaded.</div>
+</section>
 <section class="panel" style="margin-top:16px">
   <h3>QR Ownership Verification</h3><p class="muted">Generate a public QR code for any token. When the live market price reaches ₹5,000, the verification page displays a special milestone status. QR verification remains available before then.</p>
   <div class="actions"><label class="field" style="flex:1;min-width:180px;margin:0"><span>Token ID (001–100)</span><input id="verifyToken" type="number" min="1" max="100" placeholder="Enter token number"></label><button id="makeQR">Generate QR</button></div>
@@ -75,6 +90,7 @@ const SUPABASE_URL = "https://rxjrsbkqytovjqnijqek.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_La3xzuyCRI96ubrMhQj4XQ_Ofd55K-q";
 const configured = SUPABASE_URL.startsWith("https://") && !SUPABASE_URL.includes("PASTE_") && !SUPABASE_ANON_KEY.includes("PASTE_");
 let supabase = null;
+let currentQzixUser = null;
 
 const $ = id => document.getElementById(id);
 const translations = {
@@ -108,7 +124,17 @@ async function refreshMarket(){
 async function checkUser(){
  if(!supabase)return;
  const {data}=await supabase.auth.getUser();
- if(data.user){$("userInfo").textContent="Logged in: "+data.user.email;$("logout").classList.remove("hidden")}else{$("userInfo").textContent=tr("noUser");$("logout").classList.add("hidden")}
+ currentQzixUser=data.user||null;
+ if(currentQzixUser){
+   $("userInfo").textContent="Logged in: "+currentQzixUser.email;
+   $("logout").classList.remove("hidden");
+   $("walletPanel").classList.remove("hidden");
+   await refreshWallet();
+ }else{
+   $("userInfo").textContent=tr("noUser");
+   $("logout").classList.add("hidden");
+   $("walletPanel").classList.add("hidden");
+ }
 }
 async function auth(action){
  if(!supabase){$("authStatus").textContent=tr("notConfigured");return}
@@ -121,6 +147,47 @@ async function auth(action){
 }
 $("signup").onclick=()=>auth("signup");$("login").onclick=()=>auth("login");$("refresh").onclick=refreshMarket;
 $("logout").onclick=async()=>{if(supabase){await supabase.auth.signOut();$("authStatus").textContent=tr("loggedOut");await checkUser()}};
+function safeText(value){
+ return String(value==null?"":value).replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
+}
+function money(value){return "₹"+Number(value||0).toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2})}
+async function refreshWallet(){
+ if(!supabase)return;
+ if(!currentQzixUser){const {data}=await supabase.auth.getUser();currentQzixUser=data.user||null}
+ if(!currentQzixUser)return;
+ $("walletStatus").textContent="Loading wallet…";
+ const uid=currentQzixUser.id;
+ const [walletResult,ledgerResult,withdrawResult]=await Promise.all([
+   supabase.from("qzix_wallets").select("balance").eq("user_id",uid).maybeSingle(),
+   supabase.from("qzix_wallet_ledger").select("entry_type,amount,note,created_at").eq("user_id",uid).order("created_at",{ascending:false}).limit(10),
+   supabase.from("qzix_withdrawal_requests").select("amount,status,created_at").eq("user_id",uid).order("created_at",{ascending:false}).limit(10)
+ ]);
+ if(walletResult.error){$("walletStatus").textContent="Wallet could not load: "+walletResult.error.message;return}
+ $("walletBalance").textContent=money(walletResult.data?.balance||0);
+ if(ledgerResult.error){$("walletHistory").textContent="History unavailable: "+ledgerResult.error.message}
+ else if(!ledgerResult.data?.length){$("walletHistory").textContent="No wallet transactions yet."}
+ else{$("walletHistory").innerHTML=ledgerResult.data.map(row=>"<div style='display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)'><span>"+safeText(row.entry_type.replaceAll("_"," "))+"<br><small>"+safeText(new Date(row.created_at).toLocaleString())+"</small></span><b>"+money(row.amount)+"</b></div>").join("")}
+ if(withdrawResult.error){$("withdrawalHistory").textContent="Requests unavailable: "+withdrawResult.error.message}
+ else if(!withdrawResult.data?.length){$("withdrawalHistory").textContent="No withdrawal requests yet."}
+ else{$("withdrawalHistory").innerHTML=withdrawResult.data.map(row=>"<div style='display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)'><span>"+safeText(row.status.toUpperCase())+"<br><small>"+safeText(new Date(row.created_at).toLocaleString())+"</small></span><b>"+money(row.amount)+"</b></div>").join("")}
+ $("walletStatus").textContent="Wallet updated.";
+}
+async function submitWithdrawal(){
+ if(!supabase||!currentQzixUser){$("walletStatus").textContent="Please log in first.";return}
+ const amount=Number($("withdrawAmount").value);
+ if(!Number.isFinite(amount)||amount<=0){$("walletStatus").textContent="Enter a valid withdrawal amount.";return}
+ $("requestWithdrawal").disabled=true;
+ $("walletStatus").textContent="Submitting withdrawal request…";
+ const {data,error}=await supabase.rpc("qzix_request_withdrawal",{p_amount:amount});
+ $("requestWithdrawal").disabled=false;
+ if(error){$("walletStatus").textContent="Withdrawal request failed: "+error.message;return}
+ $("withdrawAmount").value="";
+ $("walletStatus").textContent="Withdrawal request submitted. It will be reviewed and paid manually after approval.";
+ await refreshWallet();
+}
+$("requestWithdrawal").addEventListener("click",submitWithdrawal);
+$("refreshWallet").addEventListener("click",refreshWallet);
+
 async function verifyToken(tokenNumber){
  const panel=$("verificationPanel"),details=$("verificationDetails");panel.classList.remove("hidden");details.textContent="Loading verification…";
  if(!supabase){details.textContent="Verification service is not configured.";return}
