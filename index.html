@@ -158,9 +158,9 @@ button.secondary{background:#172b45;border:1px solid #385575;box-shadow:none}
   <div id="manualPaymentQueue" class="muted">No requests loaded.</div>
 </section>
 <section class="panel" style="margin-top:16px">
-  <h3>QR Ownership Verification</h3><p class="muted">Generate a public QR code for any token. When the live market price reaches ₹5,000, the verification page displays a special milestone status. QR verification remains available before then.</p>
-  <div class="actions"><label class="field" style="flex:1;min-width:180px;margin:0"><span>Token ID (001–100)</span><input id="verifyToken" type="number" min="1" max="100" placeholder="Enter token number"></label><button id="makeQR">Generate QR</button></div>
-  <div id="qrStatus" class="status">Enter a token number to generate its verification QR.</div>
+  <h3>QR Ownership Verification</h3><p class="muted">QR verification is locked until the live database market price reaches ₹5,000 through verified market activity. No QR can be generated or verified before that milestone.</p>
+  <div class="actions"><label class="field" style="flex:1;min-width:180px;margin:0"><span>Token ID (001–100)</span><input id="verifyToken" type="number" min="1" max="100" placeholder="Available at ₹5,000" disabled></label><button id="makeQR" disabled>Generate QR</button></div>
+  <div id="qrStatus" class="status">Locked — QR launch begins only at a verified ₹5,000 market price.</div>
   <div id="qrResult" class="hidden" style="margin-top:12px;padding:14px;background:#0b1a2e;border:1px solid var(--line);border-radius:12px"><div id="qrcode" style="background:white;padding:12px;width:max-content;max-width:100%;border-radius:8px"></div><p id="qrDetails" class="muted"></p><a id="verifyLink" href="#" target="_blank" rel="noopener" style="color:var(--gold);overflow-wrap:anywhere">Open verification page</a></div>
 </section>
 <section class="panel hidden" id="verificationPanel" style="margin-top:16px"><h3>QZIX COIN — Public Token Verification</h3><div id="verificationDetails" class="muted">Loading token verification…</div></section>
@@ -236,7 +236,7 @@ async function refreshMarket(){
  $("marketStatus").textContent=tr("marketLoading");
  const {data,error}=await supabase.from("qzix_v2_market").select("current_level,sales_in_level,total_sales,current_price").eq("id",1).single();
  if(error){$("marketStatus").textContent=tr("marketError")+error.message;return}
- $("price").textContent="₹"+Number(data.current_price).toLocaleString("en-IN");window.qzixCurrentPrice=Number(data.current_price);$("level").textContent=data.current_level;$("sales").textContent=data.sales_in_level;$("totalSales").textContent=data.total_sales;renderPricePlan(data.current_level,data.sales_in_level);$("marketStatus").textContent=tr("marketUpdated");
+ $("price").textContent="₹"+Number(data.current_price).toLocaleString("en-IN");window.qzixCurrentPrice=Number(data.current_price);updateQrGate();$("level").textContent=data.current_level;$("sales").textContent=data.sales_in_level;$("totalSales").textContent=data.total_sales;renderPricePlan(data.current_level,data.sales_in_level);$("marketStatus").textContent=tr("marketUpdated");
 }
 async function checkUser(){
  if(!supabase)return;
@@ -308,10 +308,17 @@ async function submitWithdrawal(){
 $("requestWithdrawal").addEventListener("click",submitWithdrawal);
 $("refreshWallet").addEventListener("click",refreshWallet);
 
+function updateQrGate(){
+ const unlocked=Number(window.qzixCurrentPrice||0)>=5000;
+ $("verifyToken").disabled=!unlocked;
+ $("makeQR").disabled=!unlocked;
+ $("qrStatus").textContent=unlocked?"₹5,000 milestone reached. QR verification is now enabled.":"Locked — QR launch begins only at a verified ₹5,000 market price.";
+}
 async function verifyToken(tokenNumber){
- const panel=$("verificationPanel"),details=$("verificationDetails");panel.classList.remove("hidden");details.textContent="Loading verification…";
+ const panel=$("verificationPanel"),details=$("verificationDetails");panel.classList.remove("hidden");details.textContent="Checking ₹5,000 launch condition…";
  if(!supabase){details.textContent="Verification service is not configured.";return}
  await refreshMarket();
+ if(Number(window.qzixCurrentPrice||0)<5000){details.textContent="QR verification is not launched yet. It will become available only after the live database market price reaches ₹5,000 through verified activity.";return}
  const {data:token,error}=await supabase.from("qzix_v2_tokens").select("token_number,token_code,owner_id").eq("token_number",tokenNumber).maybeSingle();
  if(error||!token){details.textContent="Token record could not be verified. "+(error?error.message:"");return}
  const price=Number(window.qzixCurrentPrice||0),milestone=price>=5000;
@@ -319,6 +326,7 @@ async function verifyToken(tokenNumber){
  details.innerHTML=rows.map(([k,v])=>"<div style='display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)'><b>"+k+"</b><span style='text-align:right;overflow-wrap:anywhere'>"+String(v).replace(/[&<>"]/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]))+"</span></div>").join("")+"<p style='margin-top:12px'>This confirms the current database record only. It is not proof of payment, investment value, or guaranteed profit.</p>";
 }
 async function generateTokenQR(){
+ if(Number(window.qzixCurrentPrice||0)<5000){$("qrStatus").textContent="QR launch is locked until the verified market price reaches ₹5,000.";return}
  const number=Number($("verifyToken").value);
  if(!Number.isInteger(number)||number<1||number>100){$("qrStatus").textContent="Enter a whole token number from 1 to 100.";return}
  if(!supabase){$("qrStatus").textContent="Supabase is not configured.";return}
