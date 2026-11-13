@@ -52,6 +52,20 @@ button.secondary{background:#172b45;border:1px solid #385575;box-shadow:none}
 @media(max-width:760px){.wrap{padding:18px 13px 40px}.hero{padding:25px 21px}.hero:after{right:-10px;font-size:180px}.stats{grid-template-columns:1fr 1fr}.stats .stat:last-child{grid-column:auto}.token-list{grid-template-columns:repeat(3,1fr)}.panel{padding:18px}.top{align-items:flex-start}.tag{padding:7px 9px}}
 @media(max-width:420px){.brand h1{font-size:19px}.coin{width:46px;height:46px}.stats .stat strong{font-size:24px}.token-list{grid-template-columns:repeat(2,1fr)}}
 
+
+/* QZIX gradual price ladder */
+.price-plan{margin-top:16px}
+.price-ladder{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px}
+.price-step{padding:13px 11px;border:1px solid #2a405c;border-radius:12px;background:linear-gradient(145deg,#11223a,#0a1627);min-width:0}
+.price-step b,.price-step span,.price-step small{display:block}
+.price-step b{font-size:11px;color:var(--muted);letter-spacing:.5px}
+.price-step span{font-size:22px;font-weight:850;color:var(--gold);margin:5px 0}
+.price-step small{font-size:10px;color:var(--muted)}
+.price-step.active{border-color:var(--gold);background:linear-gradient(145deg,#3a2e19,#17243a);box-shadow:0 0 0 1px #f5c66d33}
+.price-plan-note{margin-top:13px;padding:12px;border-radius:11px;background:#0a1728;border:1px solid #2a405c;color:var(--muted);font-size:12px;line-height:1.6}
+@media(max-width:760px){.price-ladder{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:420px){.price-ladder{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
 </style>
 </head>
 <body>
@@ -92,6 +106,14 @@ button.secondary{background:#172b45;border:1px solid #385575;box-shadow:none}
     <div class="status" id="marketStatus"></div>
   </section>
 </div>
+
+<section class="panel price-plan">
+  <h3 id="pricePlanTitle">QZIX COIN — Gradual Price Plan</h3>
+  <p class="muted" id="pricePlanDesc">100 fixed tokens only. The same tokens circulate between buyers; no additional tokens are created.</p>
+  <div class="price-ladder" id="pricePlanLadder"></div>
+  <div class="price-plan-note" id="pricePlanStatus">Planned schedule: each round is intended to complete after 100 confirmed token transfers. No profit or future price is guaranteed.</div>
+</section>
+
 <section class="panel hidden" id="walletPanel" style="margin-top:16px">
   <h3>My Wallet</h3>
   <p class="muted">Only confirmed resale proceeds appear here. No profit is guaranteed.</p>
@@ -168,6 +190,20 @@ en:{language:"Language",fixedTag:"100 FIXED TOKENS",heroTitle:"Simple. Structure
 hi:{language:"भाषा",fixedTag:"100 निश्चित टोकन",heroTitle:"सरल। व्यवस्थित। पारदर्शी।",heroDesc:"यह QZIX COIN का शुरुआती वेब डैशबोर्ड है। यहाँ कुल सप्लाई, मौजूदा डेमो कीमत और अकाउंट लॉगिन देख सकते हैं।",priceLabel:"मौजूदा डिस्प्ले कीमत",supplyLabel:"कुल टोकन सप्लाई",tokenIdsLabel:"टोकन ID",accountTitle:"अकाउंट लॉगिन / साइन अप",accountDesc:"अपनी ईमेल से अकाउंट बनाएँ या लॉगिन करें।",emailLabel:"ईमेल",passwordLabel:"पासवर्ड",passwordPlaceholder:"कम से कम 6 अक्षर",signup:"साइन अप",login:"लॉगिन",logout:"लॉगआउट",marketTitle:"मार्केट जानकारी",marketDesc:"मार्केट का live डेटा Supabase से आता है। BUY-only manual UPI payment requests चालू हैं; admin द्वारा असली payment जाँचने के बाद ही token ownership बदलेगी। Buyer wallet और withdrawal requests उपलब्ध हैं। SELL option नहीं है।",levelLabel:"मार्केट स्तर",salesLabel:"इस स्तर की बिक्री",totalSalesLabel:"कुल दर्ज बिक्री",refresh:"मार्केट रिफ्रेश करें",tokensTitle:"100 यूनिक टोकन ID",tokensDesc:"हर टोकन की अपनी अलग ID है। यह सूची केवल पहचान के लिए है; इससे मालिकाना हक या खरीद की पुष्टि नहीं होती।",tokenCaption:"यूनिक टोकन ID",notice:"<b>महत्वपूर्ण:</b> BUY-only manual UPI payment requests और buyer wallet/withdrawal requests Supabase से जुड़े हैं। UTR भरना payment का प्रमाण नहीं है। Admin को approve करने से पहले बैंक/UPI में वास्तविक भुगतान जाँचना होगा; उसके बाद ही token ownership बदलेगी और seller को 80%, company को 20% wallet credit होगा। Withdrawal को वास्तविक भुगतान के बाद ही paid mark किया जाएगा। मुनाफ़े की कोई गारंटी नहीं है। SELL option नहीं है। वास्तविक लेन-देन से पहले कानूनी जाँच ज़रूरी है। Supabase service_role/secret key इस फ़ाइल में कभी न डालें।",footer:"QZIX COIN • निश्चित सप्लाई अवधारणा • संस्करण 1",ready:"Supabase से जुड़ने के लिए तैयार।",notConfigured:"पहले फ़ाइल में Supabase URL और anon key जोड़ें।",marketLoading:"लोड हो रहा है…",marketUnavailable:"Supabase keys सेट करने के बाद मार्केट डेटा दिखेगा।",marketUpdated:"मार्केट डेटा अपडेट हो गया।",marketError:"मार्केट डेटा नहीं मिला: ",noUser:"कोई यूज़र लॉगिन नहीं है",wait:"कृपया प्रतीक्षा करें…",invalid:"सही ईमेल और कम से कम 6 अक्षरों का पासवर्ड भरें।",accountCreated:"अकाउंट बन गया। ईमेल पुष्टि की ज़रूरत हो सकती है।",loginSuccess:"लॉगिन सफल रहा।",loggedOut:"लॉगआउट हो गया।"}
 };
 let currentLang="en";
+
+const QZIX_PRICE_LEVELS=[1,2,3,4,5,6,7,8,9,10,12,14,16,18,20];
+function renderPricePlan(level,sales){
+ const ladder=$("pricePlanLadder");
+ if(!ladder)return;
+ ladder.innerHTML=QZIX_PRICE_LEVELS.map((price,index)=>{
+   const round=index+1,active=round===Number(level);
+   return "<div class='price-step"+(active?" active":"")+"'"+(active?" aria-current='step'":"")+"><b>ROUND "+round+(active?" · CURRENT":"")+"</b><span>₹"+price+"</span><small>100 confirmed transfers</small></div>";
+ }).join("");
+ const current=QZIX_PRICE_LEVELS[Math.max(0,Math.min(QZIX_PRICE_LEVELS.length-1,Number(level||1)-1))];
+ const next=QZIX_PRICE_LEVELS[Number(level)]||null;
+ $("pricePlanStatus").textContent="Current round: "+Number(level||1)+" · Display price: ₹"+current+" · Confirmed transfers in this round: "+Number(sales||0)+"/100. "+(next?"Next planned price: ₹"+next+".":"Round 15 reaches ₹20; later pricing requires a separately announced plan.")+" Price progression is not yet automated; only admin/database-confirmed market values are live. No profit or future price is guaranteed.";
+}
+
 function tr(key){return translations[currentLang][key]||translations.en[key]||key}
 function applyLanguage(lang){
  currentLang=translations[lang]?lang:"en";document.documentElement.lang=currentLang;
@@ -188,7 +224,7 @@ async function refreshMarket(){
  $("marketStatus").textContent=tr("marketLoading");
  const {data,error}=await supabase.from("qzix_v2_market").select("current_level,sales_in_level,total_sales,current_price").eq("id",1).single();
  if(error){$("marketStatus").textContent=tr("marketError")+error.message;return}
- $("price").textContent="₹"+Number(data.current_price).toLocaleString("en-IN");window.qzixCurrentPrice=Number(data.current_price);$("level").textContent=data.current_level;$("sales").textContent=data.sales_in_level;$("totalSales").textContent=data.total_sales;$("marketStatus").textContent=tr("marketUpdated");
+ $("price").textContent="₹"+Number(data.current_price).toLocaleString("en-IN");window.qzixCurrentPrice=Number(data.current_price);$("level").textContent=data.current_level;$("sales").textContent=data.sales_in_level;$("totalSales").textContent=data.total_sales;renderPricePlan(data.current_level,data.sales_in_level);$("marketStatus").textContent=tr("marketUpdated");
 }
 async function checkUser(){
  if(!supabase)return;
