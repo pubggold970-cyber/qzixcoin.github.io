@@ -66,6 +66,25 @@
   <h3 style="margin-top:18px">Withdrawal Requests</h3>
   <div id="withdrawalHistory" class="muted">No requests loaded.</div>
 </section>
+<section class="panel" id="buyPanel" style="margin-top:16px">
+  <h3>BUY QZIX COIN — Manual UPI</h3>
+  <p class="muted">BUY only. No SELL button. Select a token currently owned by another buyer. The price is locked when your request is submitted.</p>
+  <div id="upiInstructions" class="notice" style="margin:12px 0">UPI payment details are not configured yet. Do not send money until the official UPI ID or QR is displayed here.</div>
+  <label class="field"><span>Token ID (currently owned)</span><select id="buyToken"><option value="">Loading available tokens…</option></select></label>
+  <div class="muted" id="buyPriceInfo">Current price: loading…</div>
+  <label class="field"><span>UPI Transaction Reference / UTR</span><input id="buyerUpiReference" type="text" maxlength="120" placeholder="Enter UPI reference after payment"></label>
+  <button id="submitManualPayment">Submit Payment Reference</button>
+  <div class="status" id="buyStatus" aria-live="polite">Payment is manually checked by the admin. Ownership changes only after approval.</div>
+  <h3 style="margin-top:18px">My BUY Requests</h3>
+  <div id="myPaymentRequests" class="muted">Log in to view your requests.</div>
+</section>
+<section class="panel hidden" id="manualPaymentAdminPanel" style="margin-top:16px">
+  <h3>Admin — Manual UPI Review</h3>
+  <p class="muted">Check the actual incoming payment in your bank/UPI app before approving. A typed UTR is not proof of payment.</p>
+  <button class="secondary" id="refreshManualQueue">Refresh Pending Payments</button>
+  <div class="status" id="manualAdminStatus" aria-live="polite"></div>
+  <div id="manualPaymentQueue" class="muted">No requests loaded.</div>
+</section>
 <section class="panel" style="margin-top:16px">
   <h3>QR Ownership Verification</h3><p class="muted">Generate a public QR code for any token. When the live market price reaches ₹5,000, the verification page displays a special milestone status. QR verification remains available before then.</p>
   <div class="actions"><label class="field" style="flex:1;min-width:180px;margin:0"><span>Token ID (001–100)</span><input id="verifyToken" type="number" min="1" max="100" placeholder="Enter token number"></label><button id="makeQR">Generate QR</button></div>
@@ -78,7 +97,7 @@
   <p class="muted" id="tokensDesc">Each token has a unique ID. This list is for identification only; it does not confirm ownership or purchase.</p>
   <div class="token-list" id="tokens"></div>
 </section>
-<div class="notice" id="noticeText"><b>Important — Demo Stage:</b> Buyer wallet and withdrawal requests are connected to Supabase. Token buying and real payment processing are not enabled yet. Withdrawal requests are reviewed and paid manually; a request is not proof of payout. No profit is guaranteed. Before enabling purchases, connect a payment provider with server-side payment verification and complete legal review. Never put your Supabase service_role/secret key in this file.</div>
+<div class="notice" id="noticeText"><b>Important — Demo Stage:</b> Buyer wallet and withdrawal requests are connected. BUY-only manual UPI requests are reviewed by an admin; a typed UTR is not proof of payment. No SELL option and no profit is guaranteed. Token ownership changes only after the admin checks the actual bank/UPI credit. UPI receiving details must be configured before anyone pays. Complete legal review before real transactions. Never put your Supabase service_role/secret key in this file.</div>
 <div class="footer" id="footerText">QZIX COIN • Fixed supply concept • Version 1</div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -130,10 +149,13 @@ async function checkUser(){
    $("logout").classList.remove("hidden");
    $("walletPanel").classList.remove("hidden");
    await refreshWallet();
+   await initializeManualPayments();
  }else{
    $("userInfo").textContent=tr("noUser");
    $("logout").classList.add("hidden");
    $("walletPanel").classList.add("hidden");
+   $("buyPanel").classList.add("hidden");
+   $("manualPaymentAdminPanel").classList.add("hidden");
  }
 }
 async function auth(action){
@@ -215,6 +237,88 @@ $("makeQR").addEventListener("click",generateTokenQR);
 const verifyParam=new URLSearchParams(location.search).get("verify");
 if(verifyParam){const tokenNum=Number(verifyParam);if(Number.isInteger(tokenNum)&&tokenNum>=1&&tokenNum<=100){verifyToken(tokenNum)}else{$("verificationPanel").classList.remove("hidden");$("verificationDetails").textContent="Invalid token verification link."}}
 
+
+const QZIX_UPI_ID = "";
+function showUpiInstructions(){
+ const box=$("upiInstructions");
+ if(QZIX_UPI_ID.trim()){
+   box.innerHTML="Pay only to <b>"+safeText(QZIX_UPI_ID)+"</b> using your UPI app. Pay the exact amount shown below and keep your UTR/reference. Do not pay a personal account unless you have independently confirmed it belongs to QZIX COIN.";
+ }else{
+   box.textContent="UPI payment details are not configured yet. Do not send money until the official UPI ID or QR is displayed here.";
+ }
+}
+async function refreshBuyTokens(){
+ if(!supabase)return;
+ const select=$("buyToken");
+ select.innerHTML="<option value=''>Loading…</option>";
+ const {data,error}=await supabase.from("qzix_v2_tokens").select("token_number,owner_id").not("owner_id","is",null).order("token_number");
+ if(error){select.innerHTML="<option value=''>Could not load tokens</option>";$("buyStatus").textContent="Token list error: "+error.message;return}
+ if(!data?.length){select.innerHTML="<option value=''>No tokens currently owned by buyers</option>";$("buyPriceInfo").textContent="No resale tokens are available yet. Admin must first assign tokens to initial owners.";return}
+ select.innerHTML="<option value=''>Choose a token</option>"+data.map(t=>"<option value='"+Number(t.token_number)+"'>QZIX-"+String(t.token_number).padStart(3,"0")+" · owner "+safeText(t.owner_id.slice(0,8))+"…</option>").join("");
+ const {data:market}=await supabase.from("qzix_v2_market").select("current_price").eq("id",1).maybeSingle();
+ $("buyPriceInfo").textContent="Current display price: "+money(market?.current_price||0)+" · 20% Company / 80% previous owner after admin approval.";
+}
+async function submitManualPayment(){
+ if(!supabase||!currentQzixUser){$("buyStatus").textContent="Please log in first.";return}
+ if(!QZIX_UPI_ID.trim()){$("buyStatus").textContent="UPI details are not configured yet. Do not make a payment. Ask admin to add the official UPI ID first.";return}
+ const tokenNumber=Number($("buyToken").value);
+ const reference=$("buyerUpiReference").value.trim();
+ if(!Number.isInteger(tokenNumber)||tokenNumber<1||tokenNumber>100){$("buyStatus").textContent="Choose an available token.";return}
+ if(reference.length<4){$("buyStatus").textContent="Enter the UPI transaction reference / UTR.";return}
+ $("submitManualPayment").disabled=true;
+ $("buyStatus").textContent="Submitting payment reference…";
+ const {data,error}=await supabase.rpc("qzix_submit_manual_payment",{p_token_number:tokenNumber,p_payment_reference:reference});
+ $("submitManualPayment").disabled=false;
+ if(error){$("buyStatus").textContent="Request failed: "+error.message;return}
+ $("buyerUpiReference").value="";
+ $("buyStatus").textContent="Request submitted. Token ownership will change only after the admin verifies the actual payment.";
+ await refreshMyPaymentRequests();
+}
+async function refreshMyPaymentRequests(){
+ if(!supabase||!currentQzixUser)return;
+ const {data,error}=await supabase.from("qzix_manual_payment_submissions").select("token_number,amount,payment_reference,status,admin_note,created_at").eq("buyer_id",currentQzixUser.id).order("created_at",{ascending:false}).limit(15);
+ if(error){$("myPaymentRequests").textContent="Requests unavailable: "+error.message;return}
+ if(!data?.length){$("myPaymentRequests").textContent="No BUY requests submitted yet.";return}
+ $("myPaymentRequests").innerHTML=data.map(r=>"<div style='padding:10px 0;border-bottom:1px solid var(--line)'><b>QZIX-"+String(r.token_number).padStart(3,"0")+"</b> · "+money(r.amount)+" · <b>"+safeText(r.status.toUpperCase())+"</b><br><small>UTR: "+safeText(r.payment_reference)+" · "+safeText(new Date(r.created_at).toLocaleString())+"</small>"+(r.admin_note?"<br><small>Admin note: "+safeText(r.admin_note)+"</small>":"")+"</div>").join("");
+}
+async function initializeManualPayments(){
+ showUpiInstructions();
+ $("buyPanel").classList.remove("hidden");
+ await refreshBuyTokens();
+ await refreshMyPaymentRequests();
+ const {data:admin,error}=await supabase.from("qzix_v2_admins").select("user_id").eq("user_id",currentQzixUser.id).maybeSingle();
+ if(!error&&admin){
+   $("manualPaymentAdminPanel").classList.remove("hidden");
+   await refreshManualPaymentQueue();
+ }else{
+   $("manualPaymentAdminPanel").classList.add("hidden");
+ }
+}
+async function refreshManualPaymentQueue(){
+ if(!supabase)return;
+ $("manualAdminStatus").textContent="Loading payment requests…";
+ const {data,error}=await supabase.from("qzix_manual_payment_submissions").select("id,token_number,buyer_id,seller_id,amount,payment_reference,status,created_at").eq("status","pending").order("created_at",{ascending:true}).limit(100);
+ if(error){$("manualAdminStatus").textContent="Queue error: "+error.message;return}
+ if(!data?.length){$("manualPaymentQueue").textContent="No pending payment requests."; $("manualAdminStatus").textContent="Queue updated.";return}
+ $("manualPaymentQueue").innerHTML=data.map(r=>"<div style='padding:12px 0;border-bottom:1px solid var(--line)'><b>QZIX-"+String(r.token_number).padStart(3,"0")+"</b> · "+money(r.amount)+"<br><small>Buyer: "+safeText(r.buyer_id)+"<br>Previous owner: "+safeText(r.seller_id)+"<br>UTR: "+safeText(r.payment_reference)+"<br>Submitted: "+safeText(new Date(r.created_at).toLocaleString())+"</small><div class='actions' style='margin-top:8px'><button data-manual-review='approve' data-id='"+safeText(r.id)+"'>Approve & Transfer</button><button class='secondary' data-manual-review='reject' data-id='"+safeText(r.id)+"'>Reject</button></div></div>").join("");
+ $("manualAdminStatus").textContent="Check each payment in your bank/UPI app before approving.";
+}
+async function reviewManualPayment(id,decision){
+ const message=decision==="approve"?"Confirm only after you have verified the exact amount and UTR in your bank/UPI account. Approving transfers the token and credits 80% to the previous owner's wallet.":"Reject this payment request?";
+ if(!confirm(message))return;
+ $("manualAdminStatus").textContent="Processing…";
+ const {error}=await supabase.rpc("qzix_admin_review_manual_payment",{p_submission_id:id,p_decision:decision,p_admin_note:null});
+ if(error){$("manualAdminStatus").textContent="Review failed: "+error.message;return}
+ $("manualAdminStatus").textContent=decision==="approve"?"Payment approved. Ownership transferred; 20% company / 80% previous owner recorded.":"Payment request rejected.";
+ await refreshManualPaymentQueue();
+ await refreshBuyTokens();
+}
+$("submitManualPayment").addEventListener("click",submitManualPayment);
+$("refreshManualQueue").addEventListener("click",refreshManualPaymentQueue);
+$("manualPaymentQueue").addEventListener("click",e=>{
+ const btn=e.target.closest("[data-manual-review]");
+ if(btn)reviewManualPayment(btn.dataset.id,btn.dataset.manualReview);
+});
 </script>
 </body>
 </html>
