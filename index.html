@@ -439,7 +439,7 @@ async function refreshBuyTokens(){
  if(!data?.length){select.innerHTML="<option value=''>No tokens currently owned by buyers</option>";$("buyPriceInfo").textContent="No resale tokens are available yet. Admin must first assign tokens to initial owners.";return}
  select.innerHTML="<option value=''>Choose a token</option>"+data.map(t=>"<option value='"+Number(t.token_number)+"'>QZIX-"+String(t.token_number).padStart(3,"0")+" · owner "+safeText(t.owner_id.slice(0,8))+"…</option>").join("");
  const {data:market}=await supabase.from("qzix_v2_market").select("current_price").eq("id",1).maybeSingle();
- $("buyPriceInfo").textContent="Current display price: "+money(market?.current_price||0)+" · Company fee: 20% of positive realized profit only; verified cost required.";
+ $("buyPriceInfo").textContent="Current display price: "+money(market?.current_price||0)+" · Company fee: 20% of the gross resale amount; seller receives 80%.";
  updateUpiPayLink();
 }
 function updateUpiPayLink(){
@@ -529,7 +529,7 @@ async function refreshManualPaymentQueue(){
  $("manualAdminStatus").textContent="Check each payment in your bank/UPI app before approving.";
 }
 async function reviewManualPayment(id,decision){
- const message=decision==="approve"?"Confirm only after you have verified the exact amount and UTR in your bank/UPI account. Approval transfers the token and credits the previous owner with the sale amount minus 20% of positive realized profit. Verified acquisition cost is required; otherwise approval is blocked.":"Reject this payment request?";
+ const message=decision==="approve"?"Confirm only after you have verified the exact amount and UTR in your bank/UPI account. Approval transfers the token and credits the previous owner with 80% of the gross resale amount; the company receives 20%. No profit is guaranteed.":"Reject this payment request?";
  if(!confirm(message))return;
  $("manualAdminStatus").textContent="Processing…";
  const {error}=await supabase.rpc("qzix_admin_review_manual_payment",{p_submission_id:id,p_decision:decision,p_admin_note:null});
