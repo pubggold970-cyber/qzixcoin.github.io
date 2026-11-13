@@ -124,6 +124,7 @@ $("logout").onclick=async()=>{if(supabase){await supabase.auth.signOut();$("auth
 async function verifyToken(tokenNumber){
  const panel=$("verificationPanel"),details=$("verificationDetails");panel.classList.remove("hidden");details.textContent="Loading verification…";
  if(!supabase){details.textContent="Verification service is not configured.";return}
+ await refreshMarket();
  const {data:token,error}=await supabase.from("qzix_v2_tokens").select("token_number,token_code,owner_id").eq("token_number",tokenNumber).maybeSingle();
  if(error||!token){details.textContent="Token record could not be verified. "+(error?error.message:"");return}
  const price=Number(window.qzixCurrentPrice||0),milestone=price>=5000;
