@@ -129,6 +129,19 @@ button.secondary{background:#172b45;border:1px solid #385575;box-shadow:none}
   <h3 style="margin-top:18px">Withdrawal Requests</h3>
   <div id="withdrawalHistory" class="muted">No requests loaded.</div>
 </section>
+
+<section class="panel hidden" id="initialBuyPanel" style="margin-top:16px">
+  <h3>BUY QZIX COIN — Initial Company Purchase</h3>
+  <p class="muted">Choose one of the 100 fixed tokens that has not yet been assigned. No SELL button. The token is assigned only after the payment gateway confirms a captured payment through its signed webhook.</p>
+  <div class="notice" id="initialBuyNotice">Online payment is currently disabled. Do not send money. Razorpay merchant approval and secure server credentials are still required.</div>
+  <div class="muted" id="initialBuyAvailability" style="margin:12px 0">Loading unassigned tokens…</div>
+  <label class="field"><span>Choose an available token</span><select id="initialBuyToken"><option value="">Loading…</option></select></label>
+  <div class="muted" id="initialBuyPrice">Current price: loading…</div>
+  <button id="startInitialCheckout">BUY from Company</button>
+  <div class="status" id="initialBuyStatus" aria-live="polite">Payments are not enabled yet.</div>
+  <h3 style="margin-top:18px">My Initial Purchase Orders</h3>
+  <div id="myInitialOrders" class="muted">Log in to view your orders.</div>
+</section>
 <section class="panel hidden" id="buyPanel" style="margin-top:16px">
   <h3>BUY QZIX COIN — Manual UPI</h3>
   <p class="muted">BUY only. No SELL button. Select a token currently owned by another buyer. The price is locked when your request is submitted.</p>
@@ -186,6 +199,7 @@ window.qzixSupabaseReady=(async()=>{
 })();
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
 /* Add your Supabase Project URL and anon/publishable key here.
    Never put the service_role or secret key in a public website. */
@@ -247,11 +261,13 @@ async function checkUser(){
    $("logout").classList.remove("hidden");
    $("walletPanel").classList.remove("hidden");
    await refreshWallet();
+   await initializeInitialBuy();
    await initializeManualPayments();
  }else{
    $("userInfo").textContent=tr("noUser");
    $("logout").classList.add("hidden");
    $("walletPanel").classList.add("hidden");
+   $("initialBuyPanel").classList.add("hidden");
    $("buyPanel").classList.add("hidden");
    $("manualPaymentAdminPanel").classList.add("hidden");
  }
@@ -353,6 +369,67 @@ function showUpiInstructions(){
    box.textContent="UPI payment details are not configured yet. Do not send money until the official UPI ID or QR is displayed here.";
  }
 }
+
+async function refreshInitialBuyOptions(){
+ if(!supabase)return;
+ const select=$("initialBuyToken");
+ select.innerHTML="<option value=''>Loading…</option>";
+ const {data,error}=await supabase.from("qzix_v2_tokens").select("token_number").is("owner_id",null).order("token_number",{ascending:true});
+ if(error){select.innerHTML="<option value=''>Could not load tokens</option>";$("initialBuyAvailability").textContent="Token availability could not load: "+error.message;return}
+ $("initialBuyAvailability").textContent=String(data?.length||0)+" of 100 tokens are currently available for initial purchase.";
+ select.innerHTML=data?.length?"<option value=''>Choose a token</option>"+data.map(t=>"<option value='"+Number(t.token_number)+"'>QZIX-"+String(t.token_number).padStart(3,"0")+"</option>").join(""):"<option value=''>No unassigned tokens available</option>";
+ const {data:market,error:marketError}=await supabase.from("qzix_v2_market").select("current_price").eq("id",1).maybeSingle();
+ $("initialBuyPrice").textContent=marketError?"Current price unavailable":"Current price: "+money(market?.current_price||0)+" per token";
+}
+async function refreshMyInitialOrders(){
+ if(!supabase||!currentQzixUser)return;
+ const {data,error}=await supabase.from("qzix_v2_payment_orders").select("token_number,amount,status,created_at").eq("buyer_id",currentQzixUser.id).order("created_at",{ascending:false}).limit(10);
+ if(error){$("myInitialOrders").textContent="Orders unavailable: "+error.message;return}
+ if(!data?.length){$("myInitialOrders").textContent="No initial purchase orders yet.";return}
+ $("myInitialOrders").innerHTML=data.map(r=>"<div style='padding:9px 0;border-bottom:1px solid var(--line)'><b>QZIX-"+String(r.token_number).padStart(3,"0")+"</b> · "+money(r.amount)+" · <b>"+safeText(r.status.toUpperCase())+"</b><br><small>"+safeText(new Date(r.created_at).toLocaleString())+"</small></div>").join("");
+}
+async function initializeInitialBuy(){
+ $("initialBuyPanel").classList.remove("hidden");
+ await refreshInitialBuyOptions();
+ await refreshMyInitialOrders();
+}
+async function startInitialCheckout(){
+ if(!supabase||!currentQzixUser){$("initialBuyStatus").textContent="Please log in first.";return}
+ const tokenNumber=Number($("initialBuyToken").value);
+ if(!Number.isInteger(tokenNumber)||tokenNumber<1||tokenNumber>100){$("initialBuyStatus").textContent="Choose an available token.";return}
+ const button=$("startInitialCheckout");
+ button.disabled=true;
+ $("initialBuyStatus").textContent="Checking secure payment availability…";
+ try{
+   const {data,error}=await supabase.functions.invoke("qzix-create-payment-order",{body:{token_number:tokenNumber}});
+   if(error)throw error;
+   if(!data?.order_id||!data?.key_id)throw new Error(data?.error||"Secure checkout is not available yet.");
+   if(!window.Razorpay)throw new Error("Razorpay Checkout could not load. Refresh and try again.");
+   const checkout=new window.Razorpay({
+     key:data.key_id,
+     amount:data.amount,
+     currency:data.currency,
+     name:data.name||"QZIX COIN",
+     description:data.description||"Initial token purchase",
+     order_id:data.order_id,
+     prefill:{email:currentQzixUser.email||""},
+     theme:{color:"#f5c66d"},
+     handler:async function(){
+       $("initialBuyStatus").textContent="Payment submitted. Waiting for the signed payment confirmation before token ownership changes.";
+       await refreshMyInitialOrders();
+       await refreshInitialBuyOptions();
+     },
+     modal:{ondismiss:function(){$("initialBuyStatus").textContent="Checkout closed. No token was assigned."}}
+   });
+   checkout.open();
+ }catch(e){
+   $("initialBuyStatus").textContent=e.message||"Secure checkout is not enabled. Do not send money.";
+ }finally{
+   button.disabled=false;
+ }
+}
+$("startInitialCheckout").addEventListener("click",startInitialCheckout);
+
 async function refreshBuyTokens(){
  if(!supabase)return;
  const select=$("buyToken");
