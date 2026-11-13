@@ -17,12 +17,12 @@
 <div class="wrap">
 <header class="top">
   <div class="brand"><div class="coin">Q</div><div><h1>QZIX COIN</h1><small>Fixed Supply Token Project</small></div></div>
-  <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap"><label for="language" class="muted" id="languageLabel" style="margin:0">Language</label><select id="language" aria-label="Select language" style="background:#10213a;color:#fff;border:1px solid #806b3e;border-radius:9px;padding:9px"><option value="pa">ਪੰਜਾਬੀ</option><option value="en">English</option><option value="hi">हिन्दी</option></select><div class="tag" id="fixedTag">100 FIXED TOKENS</div></div>
+  <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap"><label for="language" class="muted" id="languageLabel" style="margin:0">Language</label><select id="language" aria-label="Select language" style="background:#10213a;color:#fff;border:1px solid #806b3e;border-radius:9px;padding:9px"><option value="en">English</option></select><div class="tag" id="fixedTag">100 FIXED TOKENS</div></div>
 </header>
 <section class="hero">
   <div class="eyebrow">QZIX DIGITAL TOKEN SYSTEM</div>
   <h2 id="heroTitle">Simple. Structured. Transparent.</h2>
-  <p id="heroDesc">ਇਹ QZIX COIN ਦਾ ਸ਼ੁਰੂਆਤੀ ਵੈੱਬ ਡੈਸ਼ਬੋਰਡ ਹੈ। ਇੱਥੇ ਕੁੱਲ ਸਪਲਾਈ, ਮੌਜੂਦਾ ਡੈਮੋ ਕੀਮਤ ਅਤੇ ਖਾਤਾ ਲੌਗਇਨ ਵੇਖ ਸਕਦੇ ਹੋ।</p>
+  <p id="heroDesc">This is the initial QZIX COIN web dashboard. View the total supply, current demo price and account login here.</p>
 </section>
 <section class="stats">
   <div class="stat"><span id="priceLabel">Current Display Price</span><strong class="gold" id="price">₹1</strong></div>
@@ -32,18 +32,18 @@
 <div class="grid">
   <section class="panel">
     <h3 id="accountTitle">Account Login / Sign Up</h3>
-    <p class="muted" id="accountDesc">ਆਪਣੀ ਈਮੇਲ ਨਾਲ ਖਾਤਾ ਬਣਾਓ ਜਾਂ ਲੌਗਇਨ ਕਰੋ।</p>
+    <p class="muted" id="accountDesc">Create an account or log in with your email.</p>
     <label class="field"><span id="emailLabel">Email</span><input id="email" type="email" autocomplete="email" placeholder="you@example.com"></label>
-    <label class="field"><span id="passwordLabel">Password</span><input id="password" type="password" autocomplete="current-password" placeholder="ਘੱਟੋ-ਘੱਟ 6 ਅੱਖਰ"></label>
+    <label class="field"><span id="passwordLabel">Password</span><input id="password" type="password" autocomplete="current-password" placeholder="At least 6 characters"></label>
     <div class="actions">
       <button id="signup">Sign Up</button><button class="secondary" id="login">Login</button><button class="secondary hidden" id="logout">Logout</button>
     </div>
-    <div class="status" id="authStatus">Supabase connection ਲਈ ਹੇਠਾਂ ਦਿੱਤੀ configuration ਭਰਨੀ ਬਾਕੀ ਹੈ।</div>
+    <div class="status" id="authStatus">Supabase connection is not available. Please check the project configuration.</div>
     <div class="muted" id="userInfo"></div>
   </section>
   <section class="panel">
     <h3 id="marketTitle">Market Overview</h3>
-    <p class="muted" id="marketDesc">ਡੈਸ਼ਬੋਰਡ Supabase ਤੋਂ ਮਾਰਕੀਟ ਦੀ ਜਾਣਕਾਰੀ ਪੜ੍ਹਨ ਦੀ ਕੋਸ਼ਿਸ਼ ਕਰੇਗਾ। ਹੁਣੇ BUY/SELL ਜਾਂ ਪੈਸੇ ਦੀ ਲੈਣ-ਦੇਣ ਚਾਲੂ ਨਹੀਂ ਹੈ।</p>
+    <p class="muted" id="marketDesc">The dashboard will try to read market information from Supabase. BUY/SELL and money transactions are not enabled.</p>
     <div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--line)"><span class="muted" id="levelLabel">Market Level</span><b id="level">—</b></div>
     <div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--line)"><span class="muted" id="salesLabel">Sales in Level</span><b id="sales">—</b></div>
     <div style="display:flex;justify-content:space-between;padding:11px 0"><span class="muted" id="totalSalesLabel">Total Recorded Sales</span><b id="totalSales">—</b></div>
@@ -53,10 +53,10 @@
 </div>
 <section class="panel" style="margin-top:16px">
   <h3 id="tokensTitle">100 Unique Token IDs</h3>
-  <p class="muted" id="tokensDesc">ਹਰ ਟੋਕਨ ਦਾ ਆਪਣਾ ਵੱਖਰਾ ID ਹੈ। ਇਹ ਸੂਚੀ ਸਿਰਫ਼ ਪਛਾਣ ਲਈ ਹੈ; ਇਸ ਨਾਲ ਮਾਲਕੀ ਜਾਂ ਖਰੀਦ ਦੀ ਪੁਸ਼ਟੀ ਨਹੀਂ ਹੁੰਦੀ।</p>
+  <p class="muted" id="tokensDesc">Each token has a unique ID. This list is for identification only; it does not confirm ownership or purchase.</p>
   <div class="token-list" id="tokens"></div>
 </section>
-<div class="notice" id="noticeText"><b>Important — Demo Stage:</b> ਇਹ ਸਾਈਟ ਇਸ ਵੇਲੇ ਸਿਰਫ਼ ਫਰੰਟਐਂਡ ਅਤੇ ਲੌਗਇਨ/ਰੀਡ-ਓਨਲੀ ਟੈਸਟ ਲਈ ਹੈ। ਕੋਈ ਅਸਲੀ ਖਰੀਦ, ਵਿਕਰੀ, ਭੁਗਤਾਨ, ਮਾਲਕੀ ਟ੍ਰਾਂਸਫਰ ਜਾਂ ਮੁਨਾਫ਼ੇ ਦੀ ਗਾਰੰਟੀ ਨਹੀਂ। ਅਸਲੀ ਲੈਣ-ਦੇਣ ਤੋਂ ਪਹਿਲਾਂ ਸੁਰੱਖਿਅਤ backend, payment verification, database transaction rules ਅਤੇ ਕਾਨੂੰਨੀ ਜਾਂਚ ਲਾਜ਼ਮੀ ਹੈ। ਆਪਣੀ Supabase service_role/secret key ਕਦੇ ਵੀ ਇਸ ਫਾਈਲ ਵਿੱਚ ਨਾ ਪਾਓ।</div>
+<div class="notice" id="noticeText"><b>Important — Demo Stage:</b> This website is currently for frontend and login/read-only testing only. No real purchase, sale, payment, ownership transfer or profit is guaranteed. Before enabling real transactions, secure backend controls, payment verification, database transaction rules and legal review are required. Never put your Supabase service_role/secret key in this file.</div>
 <div class="footer" id="footerText">QZIX COIN • Fixed supply concept • Version 1</div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -89,7 +89,7 @@ $("language").addEventListener("change",e=>{applyLanguage(e.target.value);try{lo
 applyLanguage((()=>{try{const saved=localStorage.getItem("qzix-language");if(saved==="pa"){localStorage.setItem("qzix-language","en");return "en"}return saved||"en"}catch(e){return "en"}})());
 
 for(let i=1;i<=100;i++){const d=document.createElement("div");d.className="token";d.innerHTML=`<b>QZIX-${String(i).padStart(3,"0")}</b><span class="tokenCaption">Unique Token ID</span>`;$("tokens").appendChild(d)}
-if(configured && window.supabase){supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);$("authStatus").textContent=tr("ready");refreshMarket();checkUser()}else{$("marketStatus").textContent=tr("marketUnavailable")}
+if(configured && window.supabase){supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);$("authStatus").textContent=tr("ready");refreshMarket();checkUser()}else{$("authStatus").textContent=tr("notConfigured");$("marketStatus").textContent=tr("marketUnavailable") }
 async function refreshMarket(){
  if(!supabase)return;
  $("marketStatus").textContent=tr("marketLoading");
