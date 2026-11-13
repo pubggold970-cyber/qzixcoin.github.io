@@ -17,24 +17,24 @@
 <div class="wrap">
 <header class="top">
   <div class="brand"><div class="coin">Q</div><div><h1>QZIX COIN</h1><small>Fixed Supply Token Project</small></div></div>
-  <div class="tag">100 FIXED TOKENS</div>
+  <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap"><label for="language" class="muted" style="margin:0">Language</label><select id="language" aria-label="Select language" style="background:#10213a;color:#fff;border:1px solid #806b3e;border-radius:9px;padding:9px"><option value="pa">ਪੰਜਾਬੀ</option><option value="en">English</option><option value="hi">हिन्दी</option></select><div class="tag" id="fixedTag">100 FIXED TOKENS</div></div>
 </header>
 <section class="hero">
   <div class="eyebrow">QZIX DIGITAL TOKEN SYSTEM</div>
-  <h2>Simple. Structured. Transparent.</h2>
-  <p>ਇਹ QZIX COIN ਦਾ ਸ਼ੁਰੂਆਤੀ ਵੈੱਬ ਡੈਸ਼ਬੋਰਡ ਹੈ। ਇੱਥੇ ਕੁੱਲ ਸਪਲਾਈ, ਮੌਜੂਦਾ ਡੈਮੋ ਕੀਮਤ ਅਤੇ ਖਾਤਾ ਲੌਗਇਨ ਵੇਖ ਸਕਦੇ ਹੋ।</p>
+  <h2 id="heroTitle">Simple. Structured. Transparent.</h2>
+  <p id="heroDesc">ਇਹ QZIX COIN ਦਾ ਸ਼ੁਰੂਆਤੀ ਵੈੱਬ ਡੈਸ਼ਬੋਰਡ ਹੈ। ਇੱਥੇ ਕੁੱਲ ਸਪਲਾਈ, ਮੌਜੂਦਾ ਡੈਮੋ ਕੀਮਤ ਅਤੇ ਖਾਤਾ ਲੌਗਇਨ ਵੇਖ ਸਕਦੇ ਹੋ।</p>
 </section>
 <section class="stats">
-  <div class="stat"><span>Current Display Price</span><strong class="gold" id="price">₹1</strong></div>
-  <div class="stat"><span>Total Token Supply</span><strong>100</strong></div>
-  <div class="stat"><span>Token IDs</span><strong style="font-size:19px">001 – 100</strong></div>
+  <div class="stat"><span id="priceLabel">Current Display Price</span><strong class="gold" id="price">₹1</strong></div>
+  <div class="stat"><span id="supplyLabel">Total Token Supply</span><strong>100</strong></div>
+  <div class="stat"><span id="tokenIdsLabel">Token IDs</span><strong style="font-size:19px">001 – 100</strong></div>
 </section>
 <div class="grid">
   <section class="panel">
-    <h3>Account Login / Sign Up</h3>
-    <p class="muted">ਆਪਣੀ ਈਮੇਲ ਨਾਲ ਖਾਤਾ ਬਣਾਓ ਜਾਂ ਲੌਗਇਨ ਕਰੋ।</p>
-    <label class="field"><span>Email</span><input id="email" type="email" autocomplete="email" placeholder="you@example.com"></label>
-    <label class="field"><span>Password</span><input id="password" type="password" autocomplete="current-password" placeholder="ਘੱਟੋ-ਘੱਟ 6 ਅੱਖਰ"></label>
+    <h3 id="accountTitle">Account Login / Sign Up</h3>
+    <p class="muted" id="accountDesc">ਆਪਣੀ ਈਮੇਲ ਨਾਲ ਖਾਤਾ ਬਣਾਓ ਜਾਂ ਲੌਗਇਨ ਕਰੋ।</p>
+    <label class="field"><span id="emailLabel">Email</span><input id="email" type="email" autocomplete="email" placeholder="you@example.com"></label>
+    <label class="field"><span id="passwordLabel">Password</span><input id="password" type="password" autocomplete="current-password" placeholder="ਘੱਟੋ-ਘੱਟ 6 ਅੱਖਰ"></label>
     <div class="actions">
       <button id="signup">Sign Up</button><button class="secondary" id="login">Login</button><button class="secondary hidden" id="logout">Logout</button>
     </div>
@@ -42,22 +42,22 @@
     <div class="muted" id="userInfo"></div>
   </section>
   <section class="panel">
-    <h3>Market Overview</h3>
-    <p class="muted">ਡੈਸ਼ਬੋਰਡ Supabase ਤੋਂ ਮਾਰਕੀਟ ਦੀ ਜਾਣਕਾਰੀ ਪੜ੍ਹਨ ਦੀ ਕੋਸ਼ਿਸ਼ ਕਰੇਗਾ। ਹੁਣੇ BUY/SELL ਜਾਂ ਪੈਸੇ ਦੀ ਲੈਣ-ਦੇਣ ਚਾਲੂ ਨਹੀਂ ਹੈ।</p>
-    <div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--line)"><span class="muted">Market Level</span><b id="level">—</b></div>
-    <div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--line)"><span class="muted">Sales in Level</span><b id="sales">—</b></div>
-    <div style="display:flex;justify-content:space-between;padding:11px 0"><span class="muted">Total Recorded Sales</span><b id="totalSales">—</b></div>
+    <h3 id="marketTitle">Market Overview</h3>
+    <p class="muted" id="marketDesc">ਡੈਸ਼ਬੋਰਡ Supabase ਤੋਂ ਮਾਰਕੀਟ ਦੀ ਜਾਣਕਾਰੀ ਪੜ੍ਹਨ ਦੀ ਕੋਸ਼ਿਸ਼ ਕਰੇਗਾ। ਹੁਣੇ BUY/SELL ਜਾਂ ਪੈਸੇ ਦੀ ਲੈਣ-ਦੇਣ ਚਾਲੂ ਨਹੀਂ ਹੈ।</p>
+    <div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--line)"><span class="muted" id="levelLabel">Market Level</span><b id="level">—</b></div>
+    <div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--line)"><span class="muted" id="salesLabel">Sales in Level</span><b id="sales">—</b></div>
+    <div style="display:flex;justify-content:space-between;padding:11px 0"><span class="muted" id="totalSalesLabel">Total Recorded Sales</span><b id="totalSales">—</b></div>
     <button class="secondary" id="refresh">Refresh Market</button>
     <div class="status" id="marketStatus"></div>
   </section>
 </div>
 <section class="panel" style="margin-top:16px">
-  <h3>100 Unique Token IDs</h3>
-  <p class="muted">ਹਰ ਟੋਕਨ ਦਾ ਆਪਣਾ ਵੱਖਰਾ ID ਹੈ। ਇਹ ਸੂਚੀ ਸਿਰਫ਼ ਪਛਾਣ ਲਈ ਹੈ; ਇਸ ਨਾਲ ਮਾਲਕੀ ਜਾਂ ਖਰੀਦ ਦੀ ਪੁਸ਼ਟੀ ਨਹੀਂ ਹੁੰਦੀ।</p>
+  <h3 id="tokensTitle">100 Unique Token IDs</h3>
+  <p class="muted" id="tokensDesc">ਹਰ ਟੋਕਨ ਦਾ ਆਪਣਾ ਵੱਖਰਾ ID ਹੈ। ਇਹ ਸੂਚੀ ਸਿਰਫ਼ ਪਛਾਣ ਲਈ ਹੈ; ਇਸ ਨਾਲ ਮਾਲਕੀ ਜਾਂ ਖਰੀਦ ਦੀ ਪੁਸ਼ਟੀ ਨਹੀਂ ਹੁੰਦੀ।</p>
   <div class="token-list" id="tokens"></div>
 </section>
-<div class="notice"><b>Important — Demo Stage:</b> ਇਹ ਸਾਈਟ ਇਸ ਵੇਲੇ ਸਿਰਫ਼ ਫਰੰਟਐਂਡ ਅਤੇ ਲੌਗਇਨ/ਰੀਡ-ਓਨਲੀ ਟੈਸਟ ਲਈ ਹੈ। ਕੋਈ ਅਸਲੀ ਖਰੀਦ, ਵਿਕਰੀ, ਭੁਗਤਾਨ, ਮਾਲਕੀ ਟ੍ਰਾਂਸਫਰ ਜਾਂ ਮੁਨਾਫ਼ੇ ਦੀ ਗਾਰੰਟੀ ਨਹੀਂ। ਅਸਲੀ ਲੈਣ-ਦੇਣ ਤੋਂ ਪਹਿਲਾਂ ਸੁਰੱਖਿਅਤ backend, payment verification, database transaction rules ਅਤੇ ਕਾਨੂੰਨੀ ਜਾਂਚ ਲਾਜ਼ਮੀ ਹੈ। ਆਪਣੀ Supabase service_role/secret key ਕਦੇ ਵੀ ਇਸ ਫਾਈਲ ਵਿੱਚ ਨਾ ਪਾਓ।</div>
-<div class="footer">QZIX COIN • Fixed supply concept • Version 1</div>
+<div class="notice" id="noticeText"><b>Important — Demo Stage:</b> ਇਹ ਸਾਈਟ ਇਸ ਵੇਲੇ ਸਿਰਫ਼ ਫਰੰਟਐਂਡ ਅਤੇ ਲੌਗਇਨ/ਰੀਡ-ਓਨਲੀ ਟੈਸਟ ਲਈ ਹੈ। ਕੋਈ ਅਸਲੀ ਖਰੀਦ, ਵਿਕਰੀ, ਭੁਗਤਾਨ, ਮਾਲਕੀ ਟ੍ਰਾਂਸਫਰ ਜਾਂ ਮੁਨਾਫ਼ੇ ਦੀ ਗਾਰੰਟੀ ਨਹੀਂ। ਅਸਲੀ ਲੈਣ-ਦੇਣ ਤੋਂ ਪਹਿਲਾਂ ਸੁਰੱਖਿਅਤ backend, payment verification, database transaction rules ਅਤੇ ਕਾਨੂੰਨੀ ਜਾਂਚ ਲਾਜ਼ਮੀ ਹੈ। ਆਪਣੀ Supabase service_role/secret key ਕਦੇ ਵੀ ਇਸ ਫਾਈਲ ਵਿੱਚ ਨਾ ਪਾਓ।</div>
+<div class="footer" id="footerText">QZIX COIN • Fixed supply concept • Version 1</div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -67,32 +67,52 @@ const SUPABASE_URL = "https://rxjrsbkqytovjqnijqek.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_La3xzuyCRI96ubrMhQj4XQ_Ofd55K-q";
 const configured = SUPABASE_URL.startsWith("https://") && !SUPABASE_URL.includes("PASTE_") && !SUPABASE_ANON_KEY.includes("PASTE_");
 let supabase = null;
+
 const $ = id => document.getElementById(id);
-for(let i=1;i<=100;i++){const d=document.createElement("div");d.className="token";d.innerHTML=`<b>QZIX-${String(i).padStart(3,"0")}</b><span>Unique Token ID</span>`;$("tokens").appendChild(d)}
-if(configured && window.supabase){supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);$("authStatus").textContent="Supabase ਨਾਲ ਜੁੜਨ ਲਈ ਤਿਆਰ।";refreshMarket();checkUser()}else{$("marketStatus").textContent="Supabase keys ਜੋੜਨ ਤੋਂ ਬਾਅਦ Market data ਦਿਖੇਗਾ।"}
+const translations = {
+pa:{fixedTag:"100 FIXED TOKENS",language:"ਭਾਸ਼ਾ",heroTitle:"ਸਰਲ। ਵਿਵਸਥਿਤ। ਪਾਰਦਰਸ਼ੀ।",heroDesc:"ਇਹ QZIX COIN ਦਾ ਸ਼ੁਰੂਆਤੀ ਵੈੱਬ ਡੈਸ਼ਬੋਰਡ ਹੈ। ਇੱਥੇ ਕੁੱਲ ਸਪਲਾਈ, ਮੌਜੂਦਾ ਡੈਮੋ ਕੀਮਤ ਅਤੇ ਖਾਤਾ ਲੌਗਇਨ ਵੇਖ ਸਕਦੇ ਹੋ।",priceLabel:"ਮੌਜੂਦਾ ਡਿਸਪਲੇ ਕੀਮਤ",supplyLabel:"ਕੁੱਲ ਟੋਕਨ ਸਪਲਾਈ",tokenIdsLabel:"ਟੋਕਨ ID",accountTitle:"ਖਾਤਾ ਲੌਗਇਨ / ਸਾਈਨ ਅੱਪ",accountDesc:"ਆਪਣੀ ਈਮੇਲ ਨਾਲ ਖਾਤਾ ਬਣਾਓ ਜਾਂ ਲੌਗਇਨ ਕਰੋ।",emailLabel:"ਈਮੇਲ",passwordLabel:"ਪਾਸਵਰਡ",passwordPlaceholder:"ਘੱਟੋ-ਘੱਟ 6 ਅੱਖਰ",signup:"ਖਾਤਾ ਬਣਾਓ",login:"ਲੌਗਇਨ",logout:"ਲੌਗਆਉਟ",marketTitle:"ਮਾਰਕੀਟ ਜਾਣਕਾਰੀ",marketDesc:"ਡੈਸ਼ਬੋਰਡ Supabase ਤੋਂ ਮਾਰਕੀਟ ਦੀ ਜਾਣਕਾਰੀ ਪੜ੍ਹਨ ਦੀ ਕੋਸ਼ਿਸ਼ ਕਰੇਗਾ। ਹੁਣੇ ਖਰੀਦ/ਵਿਕਰੀ ਜਾਂ ਪੈਸੇ ਦੀ ਲੈਣ-ਦੇਣ ਚਾਲੂ ਨਹੀਂ ਹੈ।",levelLabel:"ਮਾਰਕੀਟ ਪੱਧਰ",salesLabel:"ਇਸ ਪੱਧਰ ਦੀ ਵਿਕਰੀ",totalSalesLabel:"ਕੁੱਲ ਦਰਜ ਵਿਕਰੀ",refresh:"ਮਾਰਕੀਟ ਰੀਫ੍ਰੈਸ਼ ਕਰੋ",tokensTitle:"100 ਵਿਲੱਖਣ ਟੋਕਨ ID",tokensDesc:"ਹਰ ਟੋਕਨ ਦਾ ਆਪਣਾ ਵੱਖਰਾ ID ਹੈ। ਇਹ ਸੂਚੀ ਸਿਰਫ਼ ਪਛਾਣ ਲਈ ਹੈ; ਇਸ ਨਾਲ ਮਾਲਕੀ ਜਾਂ ਖਰੀਦ ਦੀ ਪੁਸ਼ਟੀ ਨਹੀਂ ਹੁੰਦੀ।",tokenCaption:"ਵਿਲੱਖਣ ਟੋਕਨ ID",notice:"<b>ਮਹੱਤਵਪੂਰਨ — ਡੈਮੋ ਪੜਾਅ:</b> ਇਹ ਸਾਈਟ ਇਸ ਵੇਲੇ ਸਿਰਫ਼ ਫਰੰਟਐਂਡ ਅਤੇ ਲੌਗਇਨ/ਸਿਰਫ਼ ਪੜ੍ਹਨ ਵਾਲੇ ਟੈਸਟ ਲਈ ਹੈ। ਕੋਈ ਅਸਲੀ ਖਰੀਦ, ਵਿਕਰੀ, ਭੁਗਤਾਨ, ਮਾਲਕੀ ਟ੍ਰਾਂਸਫਰ ਜਾਂ ਮੁਨਾਫ਼ੇ ਦੀ ਗਾਰੰਟੀ ਨਹੀਂ। ਅਸਲੀ ਲੈਣ-ਦੇਣ ਤੋਂ ਪਹਿਲਾਂ ਸੁਰੱਖਿਅਤ backend, payment verification, database transaction rules ਅਤੇ ਕਾਨੂੰਨੀ ਜਾਂਚ ਲਾਜ਼ਮੀ ਹੈ। ਆਪਣੀ Supabase service_role/secret key ਕਦੇ ਵੀ ਇਸ ਫਾਈਲ ਵਿੱਚ ਨਾ ਪਾਓ।",footer:"QZIX COIN • ਨਿਸ਼ਚਿਤ ਸਪਲਾਈ ਸੰਕਲਪ • ਵਰਜਨ 1",ready:"Supabase ਨਾਲ ਜੁੜਨ ਲਈ ਤਿਆਰ।",notConfigured:"ਪਹਿਲਾਂ Supabase URL ਅਤੇ anon key ਫਾਈਲ ਵਿੱਚ ਜੋੜੋ।",marketLoading:"ਲੋਡ ਹੋ ਰਿਹਾ ਹੈ…",marketUnavailable:"Supabase keys ਜੋੜਨ ਤੋਂ ਬਾਅਦ ਮਾਰਕੀਟ ਡਾਟਾ ਦਿਖੇਗਾ।",marketUpdated:"ਮਾਰਕੀਟ ਡਾਟਾ ਅੱਪਡੇਟ ਹੋ ਗਿਆ।",marketError:"ਮਾਰਕੀਟ ਡਾਟਾ ਨਹੀਂ ਮਿਲਿਆ: ",noUser:"ਕੋਈ ਯੂਜ਼ਰ ਲੌਗਇਨ ਨਹੀਂ",wait:"ਕਿਰਪਾ ਕਰਕੇ ਉਡੀਕ ਕਰੋ…",invalid:"ਸਹੀ ਈਮੇਲ ਅਤੇ ਘੱਟੋ-ਘੱਟ 6 ਅੱਖਰਾਂ ਦਾ ਪਾਸਵਰਡ ਭਰੋ।",accountCreated:"ਖਾਤਾ ਬਣ ਗਿਆ। ਈਮੇਲ ਪੁਸ਼ਟੀ ਦੀ ਲੋੜ ਹੋ ਸਕਦੀ ਹੈ।",loginSuccess:"ਲੌਗਇਨ ਸਫਲ ਹੋ ਗਿਆ।",loggedOut:"ਲੌਗਆਉਟ ਹੋ ਗਿਆ।"},
+en:{fixedTag:"100 FIXED TOKENS",heroTitle:"Simple. Structured. Transparent.",heroDesc:"This is the initial QZIX COIN web dashboard. View the total supply, current demo price and account login here.",priceLabel:"Current Display Price",supplyLabel:"Total Token Supply",tokenIdsLabel:"Token IDs",accountTitle:"Account Login / Sign Up",accountDesc:"Create an account or log in with your email.",emailLabel:"Email",passwordLabel:"Password",passwordPlaceholder:"At least 6 characters",signup:"Sign Up",login:"Login",logout:"Logout",marketTitle:"Market Overview",marketDesc:"The dashboard will try to read market information from Supabase. BUY/SELL and money transactions are not enabled.",levelLabel:"Market Level",salesLabel:"Sales in Level",totalSalesLabel:"Total Recorded Sales",refresh:"Refresh Market",tokensTitle:"100 Unique Token IDs",tokensDesc:"Each token has a unique ID. This list is for identification only; it does not confirm ownership or purchase.",tokenCaption:"Unique Token ID",notice:"<b>Important — Demo Stage:</b> This site is currently for frontend and login/read-only testing only. No real purchase, sale, payment, ownership transfer or profit is guaranteed. Before real transactions, secure backend controls, payment verification, database transaction rules and legal review are required. Never put your Supabase service_role/secret key in this file.",footer:"QZIX COIN • Fixed supply concept • Version 1",ready:"Ready to connect to Supabase.",notConfigured:"Add the Supabase URL and anon key to the file first.",marketLoading:"Loading…",marketUnavailable:"Market data will appear after Supabase keys are configured.",marketUpdated:"Market data updated.",marketError:"Market data unavailable: ",noUser:"No user is logged in",wait:"Please wait…",invalid:"Enter a valid email and a password of at least 6 characters.",accountCreated:"Account created. Email confirmation may be required.",loginSuccess:"Login successful.",loggedOut:"Logged out."},
+hi:{fixedTag:"100 निश्चित टोकन",heroTitle:"सरल। व्यवस्थित। पारदर्शी।",heroDesc:"यह QZIX COIN का शुरुआती वेब डैशबोर्ड है। यहाँ कुल सप्लाई, मौजूदा डेमो कीमत और अकाउंट लॉगिन देख सकते हैं।",priceLabel:"मौजूदा डिस्प्ले कीमत",supplyLabel:"कुल टोकन सप्लाई",tokenIdsLabel:"टोकन ID",accountTitle:"अकाउंट लॉगिन / साइन अप",accountDesc:"अपनी ईमेल से अकाउंट बनाएँ या लॉगिन करें।",emailLabel:"ईमेल",passwordLabel:"पासवर्ड",passwordPlaceholder:"कम से कम 6 अक्षर",signup:"साइन अप",login:"लॉगिन",logout:"लॉगआउट",marketTitle:"मार्केट जानकारी",marketDesc:"डैशबोर्ड Supabase से मार्केट की जानकारी पढ़ने की कोशिश करेगा। अभी BUY/SELL या पैसे का लेन-देन चालू नहीं है।",levelLabel:"मार्केट स्तर",salesLabel:"इस स्तर की बिक्री",totalSalesLabel:"कुल दर्ज बिक्री",refresh:"मार्केट रिफ्रेश करें",tokensTitle:"100 यूनिक टोकन ID",tokensDesc:"हर टोकन की अपनी अलग ID है। यह सूची केवल पहचान के लिए है; इससे मालिकाना हक या खरीद की पुष्टि नहीं होती।",tokenCaption:"यूनिक टोकन ID",notice:"<b>महत्वपूर्ण — डेमो चरण:</b> यह साइट अभी केवल फ्रंटएंड और लॉगिन/रीड-ओनली टेस्ट के लिए है। कोई वास्तविक खरीद, बिक्री, भुगतान, मालिकाना ट्रांसफर या मुनाफ़े की गारंटी नहीं है। वास्तविक लेन-देन से पहले सुरक्षित backend, payment verification, database transaction rules और कानूनी जाँच ज़रूरी है। अपनी Supabase service_role/secret key इस फ़ाइल में कभी न डालें।",footer:"QZIX COIN • निश्चित सप्लाई अवधारणा • संस्करण 1",ready:"Supabase से जुड़ने के लिए तैयार।",notConfigured:"पहले फ़ाइल में Supabase URL और anon key जोड़ें।",marketLoading:"लोड हो रहा है…",marketUnavailable:"Supabase keys सेट करने के बाद मार्केट डेटा दिखेगा।",marketUpdated:"मार्केट डेटा अपडेट हो गया।",marketError:"मार्केट डेटा नहीं मिला: ",noUser:"कोई यूज़र लॉगिन नहीं है",wait:"कृपया प्रतीक्षा करें…",invalid:"सही ईमेल और कम से कम 6 अक्षरों का पासवर्ड भरें।",accountCreated:"अकाउंट बन गया। ईमेल पुष्टि की ज़रूरत हो सकती है।",loginSuccess:"लॉगिन सफल रहा।",loggedOut:"लॉगआउट हो गया।"}
+};
+let currentLang="pa";
+function tr(key){return translations[currentLang][key]||translations.en[key]||key}
+function applyLanguage(lang){
+ currentLang=translations[lang]?lang:"pa";document.documentElement.lang=currentLang;
+ const keys=["fixedTag","heroTitle","heroDesc","priceLabel","supplyLabel","tokenIdsLabel","accountTitle","accountDesc","emailLabel","passwordLabel","marketTitle","marketDesc","levelLabel","salesLabel","totalSalesLabel","tokensTitle","tokensDesc","footer"];
+ keys.forEach(k=>{const el=$(k);if(el)el.textContent=tr(k)});
+ $("noticeText").innerHTML=tr("notice");$("signup").textContent=tr("signup");$("login").textContent=tr("login");$("logout").textContent=tr("logout");$("refresh").textContent=tr("refresh");
+ $("password").placeholder=tr("passwordPlaceholder");$("email").placeholder="you@example.com";
+ document.querySelectorAll(".tokenCaption").forEach(el=>el.textContent=tr("tokenCaption"));
+ $("language").value=currentLang;
+}
+$("language").addEventListener("change",e=>{applyLanguage(e.target.value);try{localStorage.setItem("qzix-language",e.target.value)}catch(e){}});
+applyLanguage((()=>{try{return localStorage.getItem("qzix-language")||"pa"}catch(e){return "pa"}})());
+
+for(let i=1;i<=100;i++){const d=document.createElement("div");d.className="token";d.innerHTML=`<b>QZIX-${String(i).padStart(3,"0")}</b><span class="tokenCaption">Unique Token ID</span>`;$("tokens").appendChild(d)}
+if(configured && window.supabase){supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);$("authStatus").textContent=tr("ready");refreshMarket();checkUser()}else{$("marketStatus").textContent=tr("marketUnavailable")}
 async function refreshMarket(){
  if(!supabase)return;
- $("marketStatus").textContent="Loading…";
+ $("marketStatus").textContent=tr("marketLoading");
  const {data,error}=await supabase.from("qzix_v2_market").select("level,sales_in_level,total_sales,current_price").eq("id",1).single();
- if(error){$("marketStatus").textContent="Market data ਨਹੀਂ ਮਿਲਿਆ: "+error.message;return}
- $("price").textContent="₹"+data.current_price;$("level").textContent=data.level;$("sales").textContent=data.sales_in_level;$("totalSales").textContent=data.total_sales;$("marketStatus").textContent="Market data updated.";
+ if(error){$("marketStatus").textContent=tr("marketError")+error.message;return}
+ $("price").textContent="₹"+data.current_price;$("level").textContent=data.level;$("sales").textContent=data.sales_in_level;$("totalSales").textContent=data.total_sales;$("marketStatus").textContent=tr("marketUpdated");
 }
 async function checkUser(){
  if(!supabase)return;
  const {data}=await supabase.auth.getUser();
- if(data.user){$("userInfo").textContent="Logged in: "+data.user.email;$("logout").classList.remove("hidden")}else{$("userInfo").textContent="ਕੋਈ ਯੂਜ਼ਰ ਲੌਗਇਨ ਨਹੀਂ";$("logout").classList.add("hidden")}
+ if(data.user){$("userInfo").textContent="Logged in: "+data.user.email;$("logout").classList.remove("hidden")}else{$("userInfo").textContent=tr("noUser");$("logout").classList.add("hidden")}
 }
 async function auth(action){
- if(!supabase){$("authStatus").textContent="ਪਹਿਲਾਂ Supabase URL ਅਤੇ anon key ਫਾਈਲ ਵਿੱਚ ਜੋੜੋ।";return}
+ if(!supabase){$("authStatus").textContent=tr("notConfigured");return}
  const email=$("email").value.trim(),password=$("password").value;
- if(!email||password.length<6){$("authStatus").textContent="ਸਹੀ Email ਅਤੇ ਘੱਟੋ-ਘੱਟ 6 ਅੱਖਰਾਂ ਦਾ Password ਭਰੋ।";return}
- $("authStatus").textContent="Please wait…";
+ if(!email||password.length<6){$("authStatus").textContent=tr("invalid");return}
+ $("authStatus").textContent=tr("wait");
  const result=action==="signup"?await supabase.auth.signUp({email,password}):await supabase.auth.signInWithPassword({email,password});
- $("authStatus").textContent=result.error?result.error.message:(action==="signup"?"Account ਬਣ ਗਿਆ। Email confirmation ਦੀ ਲੋੜ ਹੋ ਸਕਦੀ ਹੈ।":"Login successful.");
+ $("authStatus").textContent=result.error?result.error.message:(action==="signup"?tr("accountCreated"):tr("loginSuccess"));
  await checkUser();
 }
 $("signup").onclick=()=>auth("signup");$("login").onclick=()=>auth("login");$("refresh").onclick=refreshMarket;
-$("logout").onclick=async()=>{if(supabase){await supabase.auth.signOut();$("authStatus").textContent="Logged out.";await checkUser()}};
+$("logout").onclick=async()=>{if(supabase){await supabase.auth.signOut();$("authStatus").textContent=tr("loggedOut");await checkUser()}};
 </script>
 </body>
 </html>
