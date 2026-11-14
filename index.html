@@ -145,7 +145,7 @@ button.secondary{background:#172b45;border:1px solid #385575;box-shadow:none}
 <section class="panel hidden" id="buyPanel" style="margin-top:16px">
   <h3>BUY QZIX COIN — Manual UPI</h3>
   <p class="muted">BUY only. No SELL button. Select a token currently owned by another buyer. The price is locked when your request is submitted.</p>
-  <div id="upiInstructions" class="notice" style="margin:12px 0">UPI payment details are not configured yet. Do not send money until the official UPI ID or QR is displayed here.</div>
+  <div id="upiInstructions" class="notice" style="margin:12px 0">Pay using Paytm UPI ID 7814244038@ptyes. Verify the recipient name in Paytm before paying. Token ownership changes only after admin verifies the actual credit.</div>
   <a id="upiPayNow" class="button secondary hidden" href="#" style="display:inline-block;text-decoration:none;margin:0 0 12px" rel="nofollow">Open UPI App to Pay</a>
   <label class="field"><span>Token ID (currently owned)</span><select id="buyToken"><option value="">Loading available tokens…</option></select></label>
   <div class="muted" id="buyPriceInfo">Current price: loading…</div>
@@ -223,11 +223,11 @@ function renderPricePlan(level,sales){
  if(!ladder)return;
  ladder.innerHTML=QZIX_PRICE_LEVELS.map((price,index)=>{
    const round=index+1,active=round===Number(level);
-   return "<div class='price-step"+(active?" active":"")+"'"+(active?" aria-current='step'":"")+"><b>ROUND "+round+(active?" · CURRENT":"")+"</b><span>₹"+price+"</span><small>100 confirmed transfers</small></div>";
+   return "<div class='price-step"+(active?" active":"")+"'"+(active?" aria-current='step'":"")+"><b>ROUND "+round+(active?" · CURRENT":"")+"</b><span>₹"+price+"</span><small>100 confirmed initial company purchases</small></div>";
  }).join("");
  const current=QZIX_PRICE_LEVELS[Math.max(0,Math.min(QZIX_PRICE_LEVELS.length-1,Number(level||1)-1))];
  const next=QZIX_PRICE_LEVELS[Number(level)]||null;
- $("pricePlanStatus").textContent="Current round: "+Number(level||1)+" · Display price: ₹"+current+" · Confirmed transfers in this round: "+Number(sales||0)+"/100. "+(next?"Next planned price: ₹"+next+".":"Round 15 reaches ₹20; later pricing requires a separately announced plan.")+" Price progression is not yet automated; only admin/database-confirmed market values are live. No profit or future price is guaranteed.";
+ $("pricePlanStatus").textContent="Current round: "+Number(level||1)+" · Display price: ₹"+current+" · Confirmed initial company purchases in this round: "+Number(sales||0)+"/100. "+(next?"Next planned price: ₹"+next+".":"Round 15 reaches ₹20; later pricing requires a separately announced plan.")+" Only confirmed initial purchases from the company advance the price level; buyer-to-buyer resales do not. No profit or future price is guaranteed.";
 }
 
 function tr(key){return translations[currentLang][key]||translations.en[key]||key}
@@ -360,13 +360,13 @@ const verifyParam=new URLSearchParams(location.search).get("verify");
 if(verifyParam){const tokenNum=Number(verifyParam);if(Number.isInteger(tokenNum)&&tokenNum>=1&&tokenNum<=100){verifyToken(tokenNum)}else{$("verificationPanel").classList.remove("hidden");$("verificationDetails").textContent="Invalid token verification link."}}
 
 
-const QZIX_UPI_ID = ""; // Keep payments disabled until company ownership of the official UPI ID is verified.
+const QZIX_UPI_ID = "7814244038@ptyes"; // Paytm UPI ID supplied by the project owner. Admin must verify actual bank/UPI credit before approval.
 function showUpiInstructions(){
  const box=$("upiInstructions");
  if(QZIX_UPI_ID.trim()){
    box.innerHTML="Pay only to <b>"+safeText(QZIX_UPI_ID)+"</b> using your UPI app. Pay the exact amount shown below and keep your UTR/reference. Do not pay a personal account unless you have independently confirmed it belongs to QZIX COIN.";
  }else{
-   box.textContent="UPI payment details are not configured yet. Do not send money until the official UPI ID or QR is displayed here.";
+   box.textContent="Pay using Paytm UPI ID 7814244038@ptyes. Verify the recipient name in Paytm before paying. Token ownership changes only after admin verifies the actual credit.";
  }
 }
 
