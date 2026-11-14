@@ -685,7 +685,6 @@ async function reviewInitialManualPayment(id,decision){
  if(error){$("initialManualAdminStatus").textContent="Review failed: "+error.message;return}
  $("initialManualAdminStatus").textContent=decision==="approve"?"Payment approved. Token assigned; company wallet and initial-sale counter updated.":"Initial purchase request rejected.";
  await refreshInitialManualQueue();
- await refreshUnassignedTokens();
  await refreshInitialBuyOptions();
  await refreshMyInitialOrders();
 }
