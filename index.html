@@ -83,7 +83,7 @@ button.secondary{background:#172b45;border:1px solid #385575;box-shadow:none}
 .token.available small{color:#a8b8ce}
 .token.available{cursor:pointer}
 .token.available:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
-#initialBuyPanel .field,#initialBuyPanel #initialBuyAvailability,#initialBuyPanel #createInitialManualRequest{display:none!important}
+#initialBuyPanel .field:has(#initialBuyToken),#initialBuyPanel #initialBuyAvailability,#initialBuyPanel #createInitialManualRequest{display:none!important}
 #buyPanel{display:none!important}
 @media(max-width:650px){.token-list{grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}.token{padding:6px 1px}.token b{font-size:10px}.token small{font-size:8px}}
 #noticeText{font-size:11px;line-height:1.5}
