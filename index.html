@@ -149,6 +149,9 @@ button.secondary{background:#172b45;border:1px solid #385575;box-shadow:none}
   <div class="status" id="walletStatus" aria-live="polite"></div>
   <h3 style="margin-top:18px">Wallet History</h3>
   <div id="walletHistory" class="muted">Log in to view your wallet history.</div>
+  <h3 style="margin-top:18px">My Tokens</h3>
+  <div id="myOwnedTokens" class="muted">Log in to view tokens owned by your account.</div>
+
   <h3 style="margin-top:18px">Withdrawal Requests</h3>
   <div id="withdrawalHistory" class="muted">No requests loaded.</div>
 </section>
@@ -342,6 +345,7 @@ async function refreshTokenStatus(){
  }
  const left=Math.max(0,100-bought);
  if(summary)summary.textContent="Bought: "+bought+"  ·  Left: "+left+"  ·  Total: 100";
+ if(currentQzixUser)await refreshMyOwnedTokens();
 }
 async function refreshMarket(){
  if(!supabase)return;
@@ -360,6 +364,7 @@ async function checkUser(){
    $("walletPanel").classList.remove("hidden");
    await refreshWallet();
    await initializeInitialBuy();
+   await refreshMyOwnedTokens();
    await initializeManualPayments();
  }else{
    $("userInfo").textContent=tr("noUser");
@@ -385,6 +390,19 @@ function safeText(value){
  return String(value==null?"":value).replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
 }
 function money(value){return "₹"+Number(value||0).toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2})}
+async function refreshMyOwnedTokens(){
+ const target=$("myOwnedTokens");
+ if(!target)return;
+ if(!supabase||!currentQzixUser){target.textContent="Log in to view tokens owned by your account.";return}
+ target.textContent="Loading your tokens…";
+ const {data,error}=await supabase.from("qzix_v2_tokens")
+   .select("token_number,token_code,acquisition_cost,acquisition_cost_verified_at")
+   .eq("owner_id",currentQzixUser.id)
+   .order("token_number",{ascending:true});
+ if(error){target.textContent="Your tokens could not be loaded: "+error.message;return}
+ if(!data?.length){target.textContent="No tokens are assigned to your account yet. After admin approves your payment, your token will appear here.";return}
+ target.innerHTML=data.map(t=>"<div style='padding:10px 0;border-bottom:1px solid var(--line)'><b>QZIX-"+String(t.token_number).padStart(3,"0")+"</b> · Owned by your account<br><small>Purchase amount: "+money(t.acquisition_cost||0)+" · "+(t.acquisition_cost_verified_at?"Admin verified":"Verification pending")+"</small></div>").join("");
+}
 async function refreshWallet(){
  if(!supabase)return;
  if(!currentQzixUser){const {data}=await supabase.auth.getUser();currentQzixUser=data.user||null}
