@@ -492,6 +492,10 @@ async function refreshMyInitialOrders(){
    updateInitialManualUpiLink(active.token_number,active.amount);
    $("initialManualConfirmArea").classList.remove("hidden");
    $("initialBuyPrice").textContent="Locked amount for QZIX-"+String(active.token_number).padStart(3,"0")+": "+money(active.amount);
+ }else{
+   activeInitialManualRequestId=null;
+   $("initialManualConfirmArea").classList.add("hidden");
+   $("initialBuyUpiPayNow").classList.add("hidden");
  }
  $("myInitialOrders").innerHTML=data.map(r=>"<div style='padding:9px 0;border-bottom:1px solid var(--line)'><b>QZIX-"+String(r.token_number).padStart(3,"0")+"</b> · "+money(r.amount)+" · <b>"+safeText(r.status.replaceAll("_"," ").toUpperCase())+"</b><br><small>Request created: "+safeText(new Date(r.created_at).toLocaleString())+(r.payment_confirmed_at?"<br>Payment marked sent: "+safeText(new Date(r.payment_confirmed_at).toLocaleString()):"")+""+"</small>"+(r.admin_note?"<br><small>Admin note: "+safeText(r.admin_note)+"</small>":"")+"</div>").join("");
 }
