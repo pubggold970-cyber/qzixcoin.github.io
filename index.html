@@ -132,15 +132,20 @@ button.secondary{background:#172b45;border:1px solid #385575;box-shadow:none}
 
 <section class="panel hidden" id="initialBuyPanel" style="margin-top:16px">
   <h3>BUY QZIX COIN — Initial Company Purchase</h3>
-  <p class="muted">Choose one of the 100 fixed tokens that has not yet been assigned. No SELL button. The token is assigned only after the payment gateway confirms a captured payment through its signed webhook.</p>
-  <div class="notice" id="initialBuyNotice">Online payment is currently disabled. Do not send money. Razorpay merchant approval and secure server credentials are still required.</div>
+  <p class="muted">Choose one of the 100 fixed tokens that has not yet been assigned. Pay through Paytm UPI only. No SELL option. Token ownership changes only after admin verifies the actual payment credit.</p>
+  <div class="notice" id="initialBuyNotice">Paytm UPI: 7814244038@ptyes. Before paying, verify the recipient's registered name in Paytm and make sure it is the intended QZIX COIN payment account. Do not rely on a screenshot or typed UTR as proof.</div>
   <div class="muted" id="initialBuyAvailability" style="margin:12px 0">Loading unassigned tokens…</div>
   <label class="field"><span>Choose an available token</span><select id="initialBuyToken"><option value="">Loading…</option></select></label>
   <div class="muted" id="initialBuyPrice">Current price: loading…</div>
-  <button id="startInitialCheckout">BUY from Company</button>
-  <div class="status" id="initialBuyStatus" aria-live="polite">Payments are not enabled yet.</div>
-  <h3 style="margin-top:18px">My Initial Purchase Orders</h3>
-  <div id="myInitialOrders" class="muted">Log in to view your orders.</div>
+  <button id="createInitialManualRequest">Create Paytm Payment Request</button>
+  <a id="initialBuyUpiPayNow" class="button secondary hidden" href="#" style="display:inline-block;text-decoration:none;margin:12px 0" rel="nofollow">Open Paytm / UPI App to Pay</a>
+  <div id="initialManualUtrArea" class="hidden">
+    <label class="field"><span>UPI Transaction Reference / UTR</span><input id="initialManualUtr" type="text" maxlength="120" placeholder="Enter UTR after payment"></label>
+    <button id="submitInitialManualPayment">Submit UTR for Admin Review</button>
+  </div>
+  <div class="status" id="initialBuyStatus" aria-live="polite">Create a request to lock the selected token and amount for 20 minutes.</div>
+  <h3 style="margin-top:18px">My Initial Paytm Requests</h3>
+  <div id="myInitialOrders" class="muted">Log in to view your requests.</div>
 </section>
 <section class="panel hidden" id="buyPanel" style="margin-top:16px">
   <h3>BUY QZIX COIN — Manual UPI</h3>
@@ -164,9 +169,15 @@ button.secondary{background:#172b45;border:1px solid #385575;box-shadow:none}
   <button id="assignInitialToken">Assign Token to Buyer</button>
   <div class="status" id="initialAssignStatus" aria-live="polite"></div>
   <hr style="border:0;border-top:1px solid var(--line);margin:18px 0">
-  <h3>Admin — Manual UPI Review</h3>
+  <h3>Admin — Initial Company Purchase UPI Review</h3>
+  <p class="muted">Approve only after matching the exact amount and UTR against the actual incoming Paytm/bank credit. Approval assigns the token and credits the company wallet.</p>
+  <button class="secondary" id="refreshInitialManualQueue">Refresh Initial Purchase Queue</button>
+  <div class="status" id="initialManualAdminStatus" aria-live="polite"></div>
+  <div id="initialManualPaymentQueue" class="muted">No initial purchase requests loaded.</div>
+  <hr style="border:0;border-top:1px solid var(--line);margin:18px 0">
+  <h3>Admin — Buyer-to-Buyer Resale UPI Review</h3>
   <p class="muted">Check the actual incoming payment in your bank/UPI app before approving. A typed UTR is not proof of payment.</p>
-  <button class="secondary" id="refreshManualQueue">Refresh Pending Payments</button>
+  <button class="secondary" id="refreshManualQueue">Refresh Pending Resale Payments</button>
   <div class="status" id="manualAdminStatus" aria-live="polite"></div>
   <div id="manualPaymentQueue" class="muted">No requests loaded.</div>
 </section>
@@ -199,7 +210,7 @@ window.qzixSupabaseReady=(async()=>{
 })();
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
 <script>
 /* Add your Supabase Project URL and anon/publishable key here.
    Never put the service_role or secret key in a public website. */
@@ -360,7 +371,8 @@ const verifyParam=new URLSearchParams(location.search).get("verify");
 if(verifyParam){const tokenNum=Number(verifyParam);if(Number.isInteger(tokenNum)&&tokenNum>=1&&tokenNum<=100){verifyToken(tokenNum)}else{$("verificationPanel").classList.remove("hidden");$("verificationDetails").textContent="Invalid token verification link."}}
 
 
-const QZIX_UPI_ID = "7814244038@ptyes"; // Paytm UPI ID supplied by the project owner. Admin must verify actual bank/UPI credit before approval.
+const QZIX_UPI_ID = "7814244038@ptyes"; // Owner-provided Paytm UPI ID; verify recipient account ownership before accepting live payments.
+let activeInitialManualRequestId = null;
 function showUpiInstructions(){
  const box=$("upiInstructions");
  if(QZIX_UPI_ID.trim()){
@@ -383,52 +395,75 @@ async function refreshInitialBuyOptions(){
 }
 async function refreshMyInitialOrders(){
  if(!supabase||!currentQzixUser)return;
- const {data,error}=await supabase.from("qzix_v2_payment_orders").select("token_number,amount,status,created_at").eq("buyer_id",currentQzixUser.id).order("created_at",{ascending:false}).limit(10);
- if(error){$("myInitialOrders").textContent="Orders unavailable: "+error.message;return}
- if(!data?.length){$("myInitialOrders").textContent="No initial purchase orders yet.";return}
- $("myInitialOrders").innerHTML=data.map(r=>"<div style='padding:9px 0;border-bottom:1px solid var(--line)'><b>QZIX-"+String(r.token_number).padStart(3,"0")+"</b> · "+money(r.amount)+" · <b>"+safeText(r.status.toUpperCase())+"</b><br><small>"+safeText(new Date(r.created_at).toLocaleString())+"</small></div>").join("");
+ const {data,error}=await supabase.from("qzix_initial_manual_purchase_requests").select("id,token_number,amount,payment_reference,status,admin_note,created_at,expires_at").eq("buyer_id",currentQzixUser.id).order("created_at",{ascending:false}).limit(10);
+ if(error){$("myInitialOrders").textContent="Requests unavailable: "+error.message;return}
+ if(!data?.length){activeInitialManualRequestId=null;$("myInitialOrders").textContent="No initial Paytm requests yet.";return}
+ const active=data.find(r=>r.status==="awaiting_payment"&&new Date(r.expires_at).getTime()>Date.now());
+ if(active){
+   activeInitialManualRequestId=active.id;
+   updateInitialManualUpiLink(active.token_number,active.amount);
+   $("initialManualUtrArea").classList.remove("hidden");
+   $("initialBuyPrice").textContent="Locked amount for QZIX-"+String(active.token_number).padStart(3,"0")+": "+money(active.amount);
+ }
+ $("myInitialOrders").innerHTML=data.map(r=>"<div style='padding:9px 0;border-bottom:1px solid var(--line)'><b>QZIX-"+String(r.token_number).padStart(3,"0")+"</b> · "+money(r.amount)+" · <b>"+safeText(r.status.replaceAll("_"," ").toUpperCase())+"</b><br><small>"+safeText(new Date(r.created_at).toLocaleString())+(r.payment_reference?" · UTR: "+safeText(r.payment_reference):"")+"</small>"+(r.admin_note?"<br><small>Admin note: "+safeText(r.admin_note)+"</small>":"")+"</div>").join("");
 }
 async function initializeInitialBuy(){
  $("initialBuyPanel").classList.remove("hidden");
  await refreshInitialBuyOptions();
  await refreshMyInitialOrders();
 }
-async function startInitialCheckout(){
+function updateInitialManualUpiLink(tokenNumber,amount){
+ const link=$("initialBuyUpiPayNow");
+ if(!link||!QZIX_UPI_ID.trim()||!Number.isInteger(Number(tokenNumber))||!Number.isFinite(Number(amount))||Number(amount)<=0)return;
+ const params=new URLSearchParams({pa:QZIX_UPI_ID,pn:"QZIX COIN",am:Number(amount).toFixed(2),cu:"INR",tn:"QZIX-INITIAL-"+String(tokenNumber).padStart(3,"0")});
+ link.href="upi://pay?"+params.toString();
+ link.classList.remove("hidden");
+}
+async function createInitialManualRequest(){
  if(!supabase||!currentQzixUser){$("initialBuyStatus").textContent="Please log in first.";return}
+ if(!QZIX_UPI_ID.trim()){$("initialBuyStatus").textContent="Paytm UPI is not configured. Do not send money.";return}
  const tokenNumber=Number($("initialBuyToken").value);
  if(!Number.isInteger(tokenNumber)||tokenNumber<1||tokenNumber>100){$("initialBuyStatus").textContent="Choose an available token.";return}
- const button=$("startInitialCheckout");
+ const button=$("createInitialManualRequest");
  button.disabled=true;
- $("initialBuyStatus").textContent="Checking secure payment availability…";
+ $("initialBuyStatus").textContent="Reserving token and locking current price…";
  try{
-   const {data,error}=await supabase.functions.invoke("qzix-create-payment-order",{body:{token_number:tokenNumber}});
+   const {data,error}=await supabase.rpc("qzix_create_initial_manual_payment",{p_token_number:tokenNumber});
    if(error)throw error;
-   if(!data?.order_id||!data?.key_id)throw new Error(data?.error||"Secure checkout is not available yet.");
-   if(!window.Razorpay)throw new Error("Razorpay Checkout could not load. Refresh and try again.");
-   const checkout=new window.Razorpay({
-     key:data.key_id,
-     amount:data.amount,
-     currency:data.currency,
-     name:data.name||"QZIX COIN",
-     description:data.description||"Initial token purchase",
-     order_id:data.order_id,
-     prefill:{email:currentQzixUser.email||""},
-     theme:{color:"#f5c66d"},
-     handler:async function(){
-       $("initialBuyStatus").textContent="Payment submitted. Waiting for the signed payment confirmation before token ownership changes.";
-       await refreshMyInitialOrders();
-       await refreshInitialBuyOptions();
-     },
-     modal:{ondismiss:function(){$("initialBuyStatus").textContent="Checkout closed. No token was assigned."}}
-   });
-   checkout.open();
+   activeInitialManualRequestId=data.request_id;
+   updateInitialManualUpiLink(tokenNumber,data.amount);
+   $("initialManualUtrArea").classList.remove("hidden");
+   $("initialBuyPrice").textContent="Locked payment amount: "+money(data.amount)+" for QZIX-"+String(tokenNumber).padStart(3,"0");
+   $("initialBuyStatus").textContent="Request created. Pay the exact amount to "+QZIX_UPI_ID+" only after verifying the registered recipient name in Paytm. Submit the UTR before the 20-minute reservation expires. Admin verifies actual credit before token assignment.";
+   await refreshMyInitialOrders();
+   await refreshInitialBuyOptions();
  }catch(e){
-   $("initialBuyStatus").textContent=e.message||"Secure checkout is not enabled. Do not send money.";
+   $("initialBuyStatus").textContent=e.message||"Could not create the Paytm payment request.";
  }finally{
    button.disabled=false;
  }
 }
-$("startInitialCheckout").addEventListener("click",startInitialCheckout);
+async function submitInitialManualPayment(){
+ if(!supabase||!currentQzixUser){$("initialBuyStatus").textContent="Please log in first.";return}
+ if(!activeInitialManualRequestId){$("initialBuyStatus").textContent="Create a Paytm payment request first.";return}
+ const reference=$("initialManualUtr").value.trim();
+ if(reference.length<4){$("initialBuyStatus").textContent="Enter the UPI transaction reference / UTR after payment.";return}
+ const button=$("submitInitialManualPayment");
+ button.disabled=true;
+ $("initialBuyStatus").textContent="Submitting UTR for admin review…";
+ const {error}=await supabase.rpc("qzix_submit_initial_manual_payment",{p_request_id:activeInitialManualRequestId,p_payment_reference:reference});
+ button.disabled=false;
+ if(error){$("initialBuyStatus").textContent="Submission failed: "+error.message;return}
+ $("initialManualUtr").value="";
+ $("initialManualUtrArea").classList.add("hidden");
+ $("initialBuyUpiPayNow").classList.add("hidden");
+ activeInitialManualRequestId=null;
+ $("initialBuyStatus").textContent="UTR submitted. The token is not assigned yet. Admin must verify the actual incoming payment.";
+ await refreshMyInitialOrders();
+ await refreshInitialManualQueue();
+}
+$("createInitialManualRequest").addEventListener("click",createInitialManualRequest);
+$("submitInitialManualPayment").addEventListener("click",submitInitialManualPayment);
 
 async function refreshBuyTokens(){
  if(!supabase)return;
@@ -485,6 +520,7 @@ async function initializeManualPayments(){
  if(!error&&admin){
    $("manualPaymentAdminPanel").classList.remove("hidden");
    await refreshUnassignedTokens();
+   await refreshInitialManualQueue();
    await refreshManualPaymentQueue();
  }else{
    $("manualPaymentAdminPanel").classList.add("hidden");
@@ -518,6 +554,33 @@ async function assignInitialToken(){
  await refreshBuyTokens();
 }
 $("assignInitialToken").addEventListener("click",assignInitialToken);
+
+async function refreshInitialManualQueue(){
+ if(!supabase)return;
+ $("initialManualAdminStatus").textContent="Loading initial purchase requests…";
+ const {data,error}=await supabase.from("qzix_initial_manual_purchase_requests").select("id,token_number,buyer_id,amount,payment_reference,status,created_at").eq("status","pending").order("created_at",{ascending:true}).limit(100);
+ if(error){$("initialManualAdminStatus").textContent="Queue error: "+error.message;return}
+ if(!data?.length){$("initialManualPaymentQueue").textContent="No pending initial company purchase requests.";$("initialManualAdminStatus").textContent="Queue updated.";return}
+ $("initialManualPaymentQueue").innerHTML=data.map(r=>"<div style='padding:12px 0;border-bottom:1px solid var(--line)'><b>QZIX-"+String(r.token_number).padStart(3,"0")+"</b> · "+money(r.amount)+"<br><small>Buyer: "+safeText(r.buyer_id)+"<br>UTR: "+safeText(r.payment_reference)+"<br>Submitted: "+safeText(new Date(r.created_at).toLocaleString())+"</small><div class='actions' style='margin-top:8px'><button data-initial-review='approve' data-id='"+safeText(r.id)+"'>Approve & Assign</button><button class='secondary' data-initial-review='reject' data-id='"+safeText(r.id)+"'>Reject</button></div></div>").join("");
+ $("initialManualAdminStatus").textContent="Verify exact amount and UTR in the actual Paytm/bank transaction history before approving.";
+}
+async function reviewInitialManualPayment(id,decision){
+ const message=decision==="approve"?"Approve only after you personally verify the exact incoming amount and UTR in the receiving Paytm/bank account. This assigns the token and credits the company wallet.":"Reject this initial purchase request?";
+ if(!confirm(message))return;
+ $("initialManualAdminStatus").textContent="Processing initial purchase review…";
+ const {data,error}=await supabase.rpc("qzix_admin_review_initial_manual_payment",{p_request_id:id,p_decision:decision,p_admin_note:null});
+ if(error){$("initialManualAdminStatus").textContent="Review failed: "+error.message;return}
+ $("initialManualAdminStatus").textContent=decision==="approve"?"Payment approved. Token assigned; company wallet and initial-sale counter updated.":"Initial purchase request rejected.";
+ await refreshInitialManualQueue();
+ await refreshUnassignedTokens();
+ await refreshInitialBuyOptions();
+ await refreshMyInitialOrders();
+}
+$("refreshInitialManualQueue").addEventListener("click",refreshInitialManualQueue);
+$("initialManualPaymentQueue").addEventListener("click",e=>{
+ const btn=e.target.closest("[data-initial-review]");
+ if(btn)reviewInitialManualPayment(btn.dataset.id,btn.dataset.initialReview);
+});
 
 async function refreshManualPaymentQueue(){
  if(!supabase)return;
