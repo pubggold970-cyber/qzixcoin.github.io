@@ -184,6 +184,12 @@ button.secondary{background:#172b45;border:1px solid #385575;box-shadow:none}
   <div id="myPaymentRequests" class="muted">Log in to view your requests.</div>
 </section>
 <section class="panel hidden" id="manualPaymentAdminPanel" style="margin-top:16px">
+  <div style="padding:13px;margin-bottom:15px;border:1px solid #3b6b5a;border-radius:12px;background:#0d2b25">
+    <b style="color:#75efbd">Free Admin Alerts</b>
+    <p class="muted" style="margin:6px 0 10px">Get a browser notification when a buyer submits a payment reference and the request enters the review queue. Keep this website open in your browser for live alerts.</p>
+    <button id="qzixEnableAlerts" class="secondary" type="button">Enable Browser Notifications</button>
+    <span id="qzixAlertStatus" class="status" aria-live="polite">Notifications are not enabled yet.</span>
+  </div>
   <h3>Admin — Initial Token Assignment</h3>
   <p class="muted">Assign one unassigned token to an existing buyer account using the buyer's User UUID. This is an initial admin allocation only: it does not record a payment or add wallet funds. Already assigned tokens cannot be reassigned here.</p>
   <div class="notice">Only use this for the first allocation of an unassigned token. For resale, use the BUY request and verify the actual payment in your bank/UPI app.</div>
@@ -600,6 +606,63 @@ async function refreshMyPaymentRequests(){
  if(!data?.length){$("myPaymentRequests").textContent="No BUY requests submitted yet.";return}
  $("myPaymentRequests").innerHTML=data.map(r=>"<div style='padding:10px 0;border-bottom:1px solid var(--line)'><b>QZIX-"+String(r.token_number).padStart(3,"0")+"</b> · "+money(r.amount)+" · <b>"+safeText(r.status.toUpperCase())+"</b><br><small>UTR: "+safeText(r.payment_reference)+" · "+safeText(new Date(r.created_at).toLocaleString())+"</small>"+(r.admin_note?"<br><small>Admin note: "+safeText(r.admin_note)+"</small>":"")+"</div>").join("");
 }
+let qzixAdminRealtimeChannel = null;
+const qzixAlertedRequests = new Set();
+
+async function enableQzixBrowserNotifications(){
+ const status=$("qzixAlertStatus");
+ if(!("Notification" in window)){status.textContent="This browser does not support browser notifications. Keep the admin dashboard open and watch the queue.";return}
+ try{
+   const permission=await Notification.requestPermission();
+   status.textContent=permission==="granted"?"Browser notifications enabled on this device.":"Notifications were not allowed. You can still see live alerts inside the open dashboard.";
+ }catch(e){status.textContent="Could not enable notifications in this browser."}
+}
+$("qzixEnableAlerts")?.addEventListener("click",enableQzixBrowserNotifications);
+
+function qzixNotifyAdminPayment(table,row){
+ const id=String(row.id||"");
+ if(!id || qzixAlertedRequests.has(table+":"+id))return;
+ qzixAlertedRequests.add(table+":"+id);
+ const token="QZIX-"+String(row.token_number||"").padStart(3,"0");
+ const amount=money(row.amount);
+ const msg=token+" · "+amount+" · Verify actual Paytm/bank credit before accepting.";
+ $("qzixAlertStatus").textContent="New payment reference submitted: "+msg;
+ $("manualAdminStatus").textContent="New buyer payment request received. Verify the actual incoming credit before approval.";
+ if(table==="qzix_initial_manual_purchase_requests"){
+   $("initialManualAdminStatus").textContent="New initial purchase payment submitted. Verify actual incoming credit before approval.";
+   refreshInitialManualQueue();
+ }else{
+   refreshManualPaymentQueue();
+ }
+ if("Notification" in window && Notification.permission==="granted"){
+   try{
+     const n=new Notification("QZIX COIN — Payment review needed",{body:msg,tag:"qzix-"+id});
+     n.onclick=()=>{window.focus();$("manualPaymentAdminPanel").scrollIntoView({behavior:"smooth"});n.close()};
+   }catch(e){}
+ }
+}
+function startQzixAdminRealtimeAlerts(){
+ if(!supabase || qzixAdminRealtimeChannel)return;
+ qzixAdminRealtimeChannel=supabase.channel("qzix-admin-payment-alerts")
+  .on("postgres_changes",{event:"*",schema:"public",table:"qzix_initial_manual_purchase_requests"},payload=>{
+    const row=payload.new||{};
+    if(row.status==="pending")qzixNotifyAdminPayment("qzix_initial_manual_purchase_requests",row);
+  })
+  .on("postgres_changes",{event:"*",schema:"public",table:"qzix_manual_payment_submissions"},payload=>{
+    const row=payload.new||{};
+    if(payload.eventType==="INSERT" && row.status==="pending")qzixNotifyAdminPayment("qzix_manual_payment_submissions",row);
+  })
+  .subscribe(status=>{
+    if(status==="SUBSCRIBED")$("qzixAlertStatus").textContent="Live alerts connected. Keep this tab open for instant notifications.";
+    else if(status==="CHANNEL_ERROR" || status==="TIMED_OUT")$("qzixAlertStatus").textContent="Live alert connection interrupted. Refresh the page and check the pending queue.";
+  });
+}
+document.addEventListener("visibilitychange",()=>{
+ if(document.visibilityState==="visible" && supabase && $("manualPaymentAdminPanel") && !$("manualPaymentAdminPanel").classList.contains("hidden")){
+   refreshInitialManualQueue();refreshManualPaymentQueue();
+ }
+});
+
 async function initializeManualPayments(){
  $("buyPanel").classList.add("hidden");
  const {data:admin,error}=await supabase.from("qzix_v2_admins").select("user_id").eq("user_id",currentQzixUser.id).maybeSingle();
@@ -608,6 +671,7 @@ async function initializeManualPayments(){
    await refreshUnassignedTokens();
    await refreshInitialManualQueue();
    await refreshManualPaymentQueue();
+   startQzixAdminRealtimeAlerts();
  }else{
    $("manualPaymentAdminPanel").classList.add("hidden");
  }
