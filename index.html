@@ -88,6 +88,7 @@ button.secondary{background:#172b45;border:1px solid #385575;box-shadow:none}
 @media(max-width:650px){.token-list{grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}.token{padding:6px 1px}.token b{font-size:10px}.token small{font-size:8px}}
 #noticeText{font-size:11px;line-height:1.5}
 @media(max-width:600px){.simple-steps{grid-template-columns:1fr}.simple-guide{padding:16px}.wrap{padding:16px 12px 35px}}
+.about-link{display:inline-block;text-decoration:none;color:#f5c66d;border:1px solid #f4c76b66;background:#f4c76b12;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:800;white-space:nowrap}.about-link:hover{background:#f4c76b22}@media(max-width:520px){.about-link{padding:8px 10px;font-size:12px}}
 </style>
 </head>
 <body>
@@ -95,24 +96,13 @@ button.secondary{background:#172b45;border:1px solid #385575;box-shadow:none}
 <header class="top">
   <div class="brand"><div class="coin">Q</div><div><h1>QZIX COIN</h1><small>Fixed Supply Token Project</small></div></div>
   <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap"><label for="language" class="muted" id="languageLabel" style="margin:0">Language</label><select id="language" aria-label="Select language" style="background:#10213a;color:#fff;border:1px solid #806b3e;border-radius:9px;padding:9px"><option value="en">English</option></select><div class="tag" id="fixedTag">100 FIXED TOKENS</div></div>
-</header>
+<a class="about-link" href="about.html">About QZIX</a></header>
 <section class="hero">
   <div class="eyebrow">QZIX DIGITAL TOKEN SYSTEM</div>
   <h2 id="heroTitle">Simple. Structured. Transparent.</h2>
   <p id="heroDesc">Your QZIX account, token supply and live market overview — in one secure dashboard.</p>
 </section>
-<section class="panel" id="aboutQzix" style="margin-top:16px">
-  <h3>About QZIX &amp; Its Founder</h3>
-  <p class="muted"><b style="color:var(--gold)">Why QZIX COIN was created</b><br>Since the day I was born, I have watched the prices of almost everything rise over time. As I grew up, I realised that things which once seemed affordable often became more expensive, while seeing prices come down seemed like only a dream. This thought inspired me to create QZIX COIN. My idea is to build a digital token project with only 100 fixed tokens, where the goal is to create a system designed around long-term value growth, a fixed supply and transparent rules. I want QZIX COIN to represent the hope that its value may grow over time rather than simply creating more tokens whenever demand increases.</p>
-  <p class="muted"><b style="color:var(--gold)">The founder's vision</b><br>To build a simple, organised and transparent digital-token system with a fixed supply of 100 tokens. Every token has a unique ID, and ownership is recorded after payment is verified and approved. This is the project's vision, not a guarantee: the token price may rise or fall, and no future price or profit is guaranteed.</p>
-  <p class="muted"><b style="color:var(--gold)">Project principles</b><br>Transparency, clear rules and careful payment verification. A token is assigned to a buyer only after the administrator verifies the actual payment. The project does not promise profit or future price growth.</p>
-  <div style="margin-top:14px;padding:15px;border:1px solid #806b3e66;border-radius:13px;background:#f4c76b0b">
-    <div class="eyebrow">FOUNDER &amp; CREATOR</div>
-    <div style="font-size:22px;font-weight:850;color:var(--gold);margin-top:7px">Preet Kulana</div>
-    <p class="muted" style="margin:6px 0 0">Founder and creator of the QZIX COIN project.</p>
-  </div>
-  <p class="muted" style="margin:12px 0 0">Founder attribution identifies the project's creator; it is not, by itself, a statement of registered-company status, regulatory approval or guaranteed legal ownership of a financial asset.</p>
-</section>
+
 <section class="stats">
   <div class="stat"><span id="priceLabel">Current Display Price</span><strong class="gold" id="price">₹1</strong></div>
   <div class="stat"><span id="supplyLabel">Total Token Supply</span><strong>100</strong></div>
