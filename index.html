@@ -483,7 +483,7 @@ async function refreshInitialBuyOptions(){
 }
 async function refreshMyInitialOrders(){
  if(!supabase||!currentQzixUser)return;
- const {data,error}=await supabase.from("qzix_initial_manual_purchase_requests").select("id,token_number,amount,status,admin_note,created_at,expires_at").eq("buyer_id",currentQzixUser.id).order("created_at",{ascending:false}).limit(10);
+ const {data,error}=await supabase.from("qzix_initial_manual_purchase_requests").select("id,token_number,amount,status,admin_note,created_at,expires_at,payment_confirmed_at").eq("buyer_id",currentQzixUser.id).order("created_at",{ascending:false}).limit(10);
  if(error){$("myInitialOrders").textContent="Requests unavailable: "+error.message;return}
  if(!data?.length){activeInitialManualRequestId=null;$("myInitialOrders").textContent="No initial Paytm requests yet.";return}
  const active=data.find(r=>r.status==="awaiting_payment"&&new Date(r.expires_at).getTime()>Date.now());
@@ -493,7 +493,7 @@ async function refreshMyInitialOrders(){
    $("initialManualConfirmArea").classList.remove("hidden");
    $("initialBuyPrice").textContent="Locked amount for QZIX-"+String(active.token_number).padStart(3,"0")+": "+money(active.amount);
  }
- $("myInitialOrders").innerHTML=data.map(r=>"<div style='padding:9px 0;border-bottom:1px solid var(--line)'><b>QZIX-"+String(r.token_number).padStart(3,"0")+"</b> · "+money(r.amount)+" · <b>"+safeText(r.status.replaceAll("_"," ").toUpperCase())+"</b><br><small>"+safeText(new Date(r.created_at).toLocaleString())+""+"</small>"+(r.admin_note?"<br><small>Admin note: "+safeText(r.admin_note)+"</small>":"")+"</div>").join("");
+ $("myInitialOrders").innerHTML=data.map(r=>"<div style='padding:9px 0;border-bottom:1px solid var(--line)'><b>QZIX-"+String(r.token_number).padStart(3,"0")+"</b> · "+money(r.amount)+" · <b>"+safeText(r.status.replaceAll("_"," ").toUpperCase())+"</b><br><small>Request created: "+safeText(new Date(r.created_at).toLocaleString())+(r.payment_confirmed_at?"<br>Payment marked sent: "+safeText(new Date(r.payment_confirmed_at).toLocaleString()):"")+""+"</small>"+(r.admin_note?"<br><small>Admin note: "+safeText(r.admin_note)+"</small>":"")+"</div>").join("");
 }
 async function initializeInitialBuy(){
  await refreshInitialBuyOptions();
@@ -667,10 +667,10 @@ async function initializeManualPayments(){
 async function refreshInitialManualQueue(){
  if(!supabase)return;
  $("initialManualAdminStatus").textContent="Loading initial purchase requests…";
- const {data,error}=await supabase.from("qzix_initial_manual_purchase_requests").select("id,token_number,buyer_id,amount,status,created_at").eq("status","pending").order("created_at",{ascending:true}).limit(100);
+ const {data,error}=await supabase.from("qzix_initial_manual_purchase_requests").select("id,token_number,buyer_id,amount,status,created_at,payment_confirmed_at").eq("status","pending").order("created_at",{ascending:true}).limit(100);
  if(error){$("initialManualAdminStatus").textContent="Queue error: "+error.message;return}
  if(!data?.length){$("initialManualPaymentQueue").textContent="No pending initial company purchase requests.";$("initialManualAdminStatus").textContent="Queue updated.";return}
- $("initialManualPaymentQueue").innerHTML=data.map(r=>"<div style='padding:12px 0;border-bottom:1px solid var(--line)'><b>QZIX-"+String(r.token_number).padStart(3,"0")+"</b> · "+money(r.amount)+"<br><small>Buyer: "+safeText(r.buyer_id)+"<br>Buyer marked paid: "+safeText(new Date(r.created_at).toLocaleString())+"</small><div class='actions' style='margin-top:8px'><button data-initial-review='approve' data-id='"+safeText(r.id)+"'>Approve & Assign</button><button class='secondary' data-initial-review='reject' data-id='"+safeText(r.id)+"'>Reject</button></div></div>").join("");
+ $("initialManualPaymentQueue").innerHTML=data.map(r=>"<div style='padding:12px 0;border-bottom:1px solid var(--line)'><b>QZIX-"+String(r.token_number).padStart(3,"0")+"</b> · "+money(r.amount)+"<br><small>Buyer: "+safeText(r.buyer_id)+"<br>Payment marked sent: "+safeText(r.payment_confirmed_at?new Date(r.payment_confirmed_at).toLocaleString():"Time unavailable")+"</small><div class='actions' style='margin-top:8px'><button data-initial-review='approve' data-id='"+safeText(r.id)+"'>Approve & Assign</button><button class='secondary' data-initial-review='reject' data-id='"+safeText(r.id)+"'>Reject</button></div></div>").join("");
  $("initialManualAdminStatus").textContent="Verify exact amount, payer details and payment time in the actual Paytm/bank transaction history before approving. Never approve based only on the buyer tapping “I Have Paid”.";
 }
 async function reviewInitialManualPayment(id,decision){
