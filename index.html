@@ -162,11 +162,10 @@ button.secondary{background:#172b45;border:1px solid #385575;box-shadow:none}
   <div class="muted" id="initialBuyPrice">Current price: loading…</div>
   <button id="createInitialManualRequest" class="hidden">Create Paytm Payment Request</button>
   <a id="initialBuyUpiPayNow" class="button secondary hidden" href="#" style="display:inline-block;text-decoration:none;margin:12px 0" rel="nofollow">Open Paytm / UPI App to Pay</a>
-  <div id="initialManualUtrArea" class="hidden">
-    <label class="field"><span>UPI Transaction Reference / UTR</span><input id="initialManualUtr" type="text" maxlength="120" placeholder="Enter UTR after payment"></label>
-    <button id="submitInitialManualPayment">Submit UTR for Admin Review</button>
+  <div id="initialManualConfirmArea" class="hidden">
+    <button id="confirmInitialPayment">I Have Paid — Send for Admin Review</button>
   </div>
-  <div class="status" id="initialBuyStatus" aria-live="polite">Create a request to lock the selected token and amount for 20 minutes.</div>
+  <div class="status" id="initialBuyStatus" aria-live="polite">Create a request to lock the selected token and amount for 20 minutes. Pay the exact amount, then tap “I Have Paid”.</div>
   <h3 style="margin-top:18px">My Initial Paytm Requests</h3>
   <div id="myInitialOrders" class="muted">Log in to view your requests.</div>
 </section>
@@ -192,7 +191,7 @@ button.secondary{background:#172b45;border:1px solid #385575;box-shadow:none}
   </div>
   <hr style="border:0;border-top:1px solid var(--line);margin:18px 0">
   <h3>Admin — Initial Company Purchase UPI Review</h3>
-  <p class="muted">Approve only after matching the exact amount and UTR against the actual incoming Paytm/bank credit. Approval assigns the token and credits the company wallet.</p>
+  <p class="muted">Approve only after matching the exact amount, payer details and payment time against an actual incoming Paytm/bank credit. If you cannot confidently identify this payment, do not approve. Approval assigns the token and credits the company wallet.</p>
   <button class="secondary" id="refreshInitialManualQueue">Refresh Initial Purchase Queue</button>
   <div class="status" id="initialManualAdminStatus" aria-live="polite"></div>
   <div id="initialManualPaymentQueue" class="muted">No initial purchase requests loaded.</div>
@@ -491,7 +490,7 @@ async function refreshMyInitialOrders(){
  if(active){
    activeInitialManualRequestId=active.id;
    updateInitialManualUpiLink(active.token_number,active.amount);
-   $("initialManualUtrArea").classList.remove("hidden");
+   $("initialManualConfirmArea").classList.remove("hidden");
    $("initialBuyPrice").textContent="Locked amount for QZIX-"+String(active.token_number).padStart(3,"0")+": "+money(active.amount);
  }
  $("myInitialOrders").innerHTML=data.map(r=>"<div style='padding:9px 0;border-bottom:1px solid var(--line)'><b>QZIX-"+String(r.token_number).padStart(3,"0")+"</b> · "+money(r.amount)+" · <b>"+safeText(r.status.replaceAll("_"," ").toUpperCase())+"</b><br><small>"+safeText(new Date(r.created_at).toLocaleString())+(r.payment_reference?" · UTR: "+safeText(r.payment_reference):"")+"</small>"+(r.admin_note?"<br><small>Admin note: "+safeText(r.admin_note)+"</small>":"")+"</div>").join("");
@@ -520,9 +519,9 @@ async function createInitialManualRequest(){
    if(error)throw error;
    activeInitialManualRequestId=data.request_id;
    updateInitialManualUpiLink(tokenNumber,data.amount);
-   $("initialManualUtrArea").classList.remove("hidden");
+   $("initialManualConfirmArea").classList.remove("hidden");
    $("initialBuyPrice").textContent="Locked payment amount: "+money(data.amount)+" for QZIX-"+String(tokenNumber).padStart(3,"0");
-   $("initialBuyStatus").textContent="Request created. Pay the exact amount to "+QZIX_UPI_ID+" only after verifying the registered recipient name in Paytm. Submit the UTR before the 20-minute reservation expires. Admin verifies actual credit before token assignment.";
+   $("initialBuyStatus").textContent="Request created. Pay the exact amount to "+QZIX_UPI_ID+" only after verifying the registered recipient name in Paytm. Tap “I Have Paid” before the 20-minute reservation expires. Admin verifies actual credit before token assignment.";
    await refreshMyInitialOrders();
    await refreshInitialBuyOptions();
  }catch(e){
@@ -531,27 +530,24 @@ async function createInitialManualRequest(){
    button.disabled=false;
  }
 }
-async function submitInitialManualPayment(){
+async function confirmInitialPayment(){
  if(!supabase||!currentQzixUser){$("initialBuyStatus").textContent="Please log in first.";return}
  if(!activeInitialManualRequestId){$("initialBuyStatus").textContent="Create a Paytm payment request first.";return}
- const reference=$("initialManualUtr").value.trim();
- if(reference.length<4){$("initialBuyStatus").textContent="Enter the UPI transaction reference / UTR after payment.";return}
- const button=$("submitInitialManualPayment");
+ const button=$("confirmInitialPayment");
  button.disabled=true;
- $("initialBuyStatus").textContent="Submitting UTR for admin review…";
- const {error}=await supabase.rpc("qzix_submit_initial_manual_payment",{p_request_id:activeInitialManualRequestId,p_payment_reference:reference});
+ $("initialBuyStatus").textContent="Sending your payment confirmation to admin…";
+ const {error}=await supabase.rpc("qzix_confirm_initial_manual_payment",{p_request_id:activeInitialManualRequestId});
  button.disabled=false;
- if(error){$("initialBuyStatus").textContent="Submission failed: "+error.message;return}
- $("initialManualUtr").value="";
- $("initialManualUtrArea").classList.add("hidden");
- $("initialBuyUpiPayNow").classList.add("hidden");
+ if(error){$("initialBuyStatus").textContent="Could not send confirmation: "+error.message;return}
  activeInitialManualRequestId=null;
- $("initialBuyStatus").textContent="UTR submitted. The token is not assigned yet. Admin must verify the actual incoming payment.";
+ $("initialManualConfirmArea").classList.add("hidden");
+ $("initialBuyUpiPayNow").classList.add("hidden");
+ $("initialBuyStatus").textContent="Payment marked as sent. Admin will verify the actual Paytm/bank credit. Your token will appear in My Tokens only after approval.";
  await refreshMyInitialOrders();
  await refreshInitialManualQueue();
 }
 $("createInitialManualRequest").addEventListener("click",createInitialManualRequest);
-$("submitInitialManualPayment").addEventListener("click",submitInitialManualPayment);
+$("confirmInitialPayment").addEventListener("click",confirmInitialPayment);
 
 async function refreshBuyTokens(){
  if(!supabase)return;
@@ -619,10 +615,10 @@ function qzixNotifyAdminPayment(table,row){
  const token="QZIX-"+String(row.token_number||"").padStart(3,"0");
  const amount=money(row.amount);
  const msg=token+" · "+amount+" · Verify actual Paytm/bank credit before accepting.";
- $("qzixAlertStatus").textContent="New payment reference submitted: "+msg;
+ $("qzixAlertStatus").textContent="Buyer marked payment as sent: "+msg;
  $("manualAdminStatus").textContent="New buyer payment request received. Verify the actual incoming credit before approval.";
  if(table==="qzix_initial_manual_purchase_requests"){
-   $("initialManualAdminStatus").textContent="New initial purchase payment submitted. Verify actual incoming credit before approval.";
+   $("initialManualAdminStatus").textContent="Buyer marked payment as sent. Verify the actual incoming credit before approval.";
    refreshInitialManualQueue();
  }else{
    refreshManualPaymentQueue();
@@ -674,8 +670,8 @@ async function refreshInitialManualQueue(){
  const {data,error}=await supabase.from("qzix_initial_manual_purchase_requests").select("id,token_number,buyer_id,amount,payment_reference,status,created_at").eq("status","pending").order("created_at",{ascending:true}).limit(100);
  if(error){$("initialManualAdminStatus").textContent="Queue error: "+error.message;return}
  if(!data?.length){$("initialManualPaymentQueue").textContent="No pending initial company purchase requests.";$("initialManualAdminStatus").textContent="Queue updated.";return}
- $("initialManualPaymentQueue").innerHTML=data.map(r=>"<div style='padding:12px 0;border-bottom:1px solid var(--line)'><b>QZIX-"+String(r.token_number).padStart(3,"0")+"</b> · "+money(r.amount)+"<br><small>Buyer: "+safeText(r.buyer_id)+"<br>UTR: "+safeText(r.payment_reference)+"<br>Submitted: "+safeText(new Date(r.created_at).toLocaleString())+"</small><div class='actions' style='margin-top:8px'><button data-initial-review='approve' data-id='"+safeText(r.id)+"'>Approve & Assign</button><button class='secondary' data-initial-review='reject' data-id='"+safeText(r.id)+"'>Reject</button></div></div>").join("");
- $("initialManualAdminStatus").textContent="Verify exact amount and UTR in the actual Paytm/bank transaction history before approving.";
+ $("initialManualPaymentQueue").innerHTML=data.map(r=>"<div style='padding:12px 0;border-bottom:1px solid var(--line)'><b>QZIX-"+String(r.token_number).padStart(3,"0")+"</b> · "+money(r.amount)+"<br><small>Buyer: "+safeText(r.buyer_id)+"<br>Buyer marked paid: "+safeText(new Date(r.created_at).toLocaleString())+"</small><div class='actions' style='margin-top:8px'><button data-initial-review='approve' data-id='"+safeText(r.id)+"'>Approve & Assign</button><button class='secondary' data-initial-review='reject' data-id='"+safeText(r.id)+"'>Reject</button></div></div>").join("");
+ $("initialManualAdminStatus").textContent="Verify exact amount, payer details and payment time in the actual Paytm/bank transaction history before approving. Never approve based only on the buyer tapping “I Have Paid”.";
 }
 async function reviewInitialManualPayment(id,decision){
  const message=decision==="approve"?"Approve only after you personally verify the exact incoming amount and UTR in the receiving Paytm/bank account. This assigns the token and credits the company wallet.":"Reject this initial purchase request?";
