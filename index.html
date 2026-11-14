@@ -66,6 +66,16 @@ button.secondary{background:#172b45;border:1px solid #385575;box-shadow:none}
 @media(max-width:760px){.price-ladder{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:420px){.price-ladder{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
+
+/* Simple buyer-first dashboard */
+.simple-guide{margin:16px 0 20px;padding:18px 20px;border:1px solid #365171;border-radius:18px;background:linear-gradient(130deg,#142b47,#0d1b2e)}
+.simple-guide h3{margin:0 0 10px;font-size:17px}.simple-guide p{margin:6px 0;color:#b8c7da;font-size:13px;line-height:1.55}
+.simple-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}.simple-step{padding:12px;border-radius:12px;background:#081629;border:1px solid #2b405c}.simple-step b{display:block;color:var(--gold);font-size:13px;margin-bottom:5px}.simple-step span{font-size:12px;color:#c1cede;line-height:1.45}
+.grid{grid-template-columns:1fr}.grid>section:nth-child(2){display:none}
+.price-plan,#tokensTitle,#tokensTitle~p,#tokens{display:none!important}
+body>.wrap>section.panel:has(#verifyToken){display:none}
+#noticeText{font-size:11px;line-height:1.5}
+@media(max-width:600px){.simple-steps{grid-template-columns:1fr}.simple-guide{padding:16px}.wrap{padding:16px 12px 35px}}
 </style>
 </head>
 <body>
@@ -84,6 +94,7 @@ button.secondary{background:#172b45;border:1px solid #385575;box-shadow:none}
   <div class="stat"><span id="supplyLabel">Total Token Supply</span><strong>100</strong></div>
   <div class="stat"><span id="tokenIdsLabel">Token IDs</span><strong style="font-size:19px">001 – 100</strong></div>
 </section>
+<section class="simple-guide"><h3>Welcome to QZIX COIN</h3><p>A simple guide for new buyers. There are only 100 fixed tokens (QZIX-001 to QZIX-100). The displayed price is not a promise of profit or future value.</p><div class="simple-steps"><div class="simple-step"><b>1. Create your account</b><span>Sign up with your email, then log in.</span></div><div class="simple-step"><b>2. Choose a token</b><span>Buy an unassigned token or request to buy one from its current owner.</span></div><div class="simple-step"><b>3. Pay and wait</b><span>Pay only the exact amount shown. Ownership changes after the admin verifies the actual payment.</span></div></div></section>
 <div class="grid">
   <section class="panel">
     <h3 id="accountTitle">Account Login / Sign Up</h3>
@@ -131,8 +142,8 @@ button.secondary{background:#172b45;border:1px solid #385575;box-shadow:none}
 </section>
 
 <section class="panel hidden" id="initialBuyPanel" style="margin-top:16px">
-  <h3>BUY QZIX COIN — Initial Company Purchase</h3>
-  <p class="muted">Choose one of the 100 fixed tokens that has not yet been assigned. Pay through Paytm UPI only. No SELL option. Token ownership changes only after admin verifies the actual payment credit.</p>
+  <h3>1. Buy a New QZIX Token</h3>
+  <p class="muted">Choose a token that has not been assigned yet. Pay the exact amount shown. Your token is assigned after the admin verifies the payment.</p>
   <div class="notice" id="initialBuyNotice">Paytm UPI: 7814244038@ptyes. Before paying, verify the recipient's registered name in Paytm and make sure it is the intended QZIX COIN payment account. Do not rely on a screenshot or typed UTR as proof.</div>
   <div class="muted" id="initialBuyAvailability" style="margin:12px 0">Loading unassigned tokens…</div>
   <label class="field"><span>Choose an available token</span><select id="initialBuyToken"><option value="">Loading…</option></select></label>
@@ -148,8 +159,8 @@ button.secondary{background:#172b45;border:1px solid #385575;box-shadow:none}
   <div id="myInitialOrders" class="muted">Log in to view your requests.</div>
 </section>
 <section class="panel hidden" id="buyPanel" style="margin-top:16px">
-  <h3>BUY QZIX COIN — Manual UPI</h3>
-  <p class="muted">BUY only. No SELL button. Select a token currently owned by another buyer. The price is locked when your request is submitted.</p>
+  <h3>2. Buy from Another Owner</h3>
+  <p class="muted">Choose a token currently owned by another buyer. The price is locked when your request is submitted. Ownership changes only after payment verification.</p>
   <div id="upiInstructions" class="notice" style="margin:12px 0">Pay using Paytm UPI ID 7814244038@ptyes. Verify the recipient name in Paytm before paying. Token ownership changes only after admin verifies the actual credit.</div>
   <a id="upiPayNow" class="button secondary hidden" href="#" style="display:inline-block;text-decoration:none;margin:0 0 12px" rel="nofollow">Open UPI App to Pay</a>
   <label class="field"><span>Token ID (currently owned)</span><select id="buyToken"><option value="">Loading available tokens…</option></select></label>
@@ -193,7 +204,7 @@ button.secondary{background:#172b45;border:1px solid #385575;box-shadow:none}
   <p class="muted" id="tokensDesc">Each token has a unique ID. This list is for identification only; it does not confirm ownership or purchase.</p>
   <div class="token-list" id="tokens"></div>
 </section>
-<div class="notice" id="noticeText"><b>Important — Demo Stage:</b> Buyer wallet and withdrawal requests are connected. BUY-only manual UPI requests are reviewed by an admin; a typed UTR is not proof of payment. No SELL option and no profit is guaranteed. Token ownership changes only after the admin checks the actual bank/UPI credit. UPI receiving details must be configured before anyone pays. Complete legal review before real transactions. Never put your Supabase service_role/secret key in this file.</div>
+<div class="notice" id="noticeText"><b>Important:</b> QZIX COIN has 100 fixed tokens. A payment reference or screenshot alone is not proof of payment. The admin verifies the actual bank/UPI credit before changing ownership. No profit or future price is guaranteed. There is no SELL option. Complete legal and payment checks before accepting real transactions.</div>
 <div class="footer" id="footerText">QZIX COIN • Fixed supply concept • Version 1</div>
 </div>
 <script>
