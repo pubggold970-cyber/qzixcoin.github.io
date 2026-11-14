@@ -81,6 +81,10 @@ button.secondary{background:#172b45;border:1px solid #385575;box-shadow:none}
 .token.bought{background:#103c32;border-color:#27b887}
 .token.bought b,.token.bought small{color:#75efbd}
 .token.available small{color:#a8b8ce}
+.token.available{cursor:pointer}
+.token.available:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+#initialBuyPanel .field,#initialBuyPanel #initialBuyAvailability,#initialBuyPanel #createInitialManualRequest{display:none!important}
+#buyPanel{display:none!important}
 @media(max-width:650px){.token-list{grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}.token{padding:6px 1px}.token b{font-size:10px}.token small{font-size:8px}}
 #noticeText{font-size:11px;line-height:1.5}
 @media(max-width:600px){.simple-steps{grid-template-columns:1fr}.simple-guide{padding:16px}.wrap{padding:16px 12px 35px}}
@@ -150,13 +154,13 @@ button.secondary{background:#172b45;border:1px solid #385575;box-shadow:none}
 </section>
 
 <section class="panel hidden" id="initialBuyPanel" style="margin-top:16px">
-  <h3>1. Buy a New QZIX Token</h3>
-  <p class="muted">Choose a token that has not been assigned yet. Pay the exact amount shown. Your token is assigned after the admin verifies the payment.</p>
+  <h3 id="selectedTokenHeading">Buy Selected QZIX Token</h3>
+  <p class="muted">Your selected token is reserved and the payment amount is locked when the request is created. Pay only after checking the recipient name. Ownership changes only after admin verifies the actual payment.</p>
   <div class="notice" id="initialBuyNotice">Paytm UPI: 7814244038@ptyes. Before paying, verify the recipient's registered name in Paytm and make sure it is the intended QZIX COIN payment account. Do not rely on a screenshot or typed UTR as proof.</div>
-  <div class="muted" id="initialBuyAvailability" style="margin:12px 0">Loading unassigned tokens…</div>
-  <label class="field"><span>Choose an available token</span><select id="initialBuyToken"><option value="">Loading…</option></select></label>
+  <div class="muted" id="initialBuyAvailability" style="margin:12px 0">Choose a LEFT token above.</div>
+  <label class="field hidden"><span>Selected token</span><select id="initialBuyToken"><option value="">Loading…</option></select></label>
   <div class="muted" id="initialBuyPrice">Current price: loading…</div>
-  <button id="createInitialManualRequest">Create Paytm Payment Request</button>
+  <button id="createInitialManualRequest" class="hidden">Create Paytm Payment Request</button>
   <a id="initialBuyUpiPayNow" class="button secondary hidden" href="#" style="display:inline-block;text-decoration:none;margin:12px 0" rel="nofollow">Open Paytm / UPI App to Pay</a>
   <div id="initialManualUtrArea" class="hidden">
     <label class="field"><span>UPI Transaction Reference / UTR</span><input id="initialManualUtr" type="text" maxlength="120" placeholder="Enter UTR after payment"></label>
@@ -276,6 +280,44 @@ applyLanguage((()=>{try{const saved=localStorage.getItem("qzix-language");if(sav
 
 for(let i=1;i<=100;i++){const d=document.createElement("div");d.id="qzix-token-"+i;d.className="token available";d.innerHTML=`<b>${String(i).padStart(3,"0")}</b><small>LEFT</small>`;$("tokens").appendChild(d)}
 window.qzixSupabaseReady.then(()=>{if(configured){try{supabase=window.qzixCreateClient(SUPABASE_URL,SUPABASE_ANON_KEY);$("authStatus").textContent=tr("ready");refreshMarket();refreshTokenStatus();setInterval(refreshTokenStatus,30000);checkUser()}catch(e){$("authStatus").textContent="Supabase client failed to start: "+(e?.message||"Unknown error");$("marketStatus").textContent=tr("marketUnavailable")}}else{$("authStatus").textContent=tr("notConfigured");$("marketStatus").textContent=tr("marketUnavailable")}}).catch(e=>{$("authStatus").textContent="Supabase SDK import failed: "+(e?.message||"Check internet connection or browser support");$("marketStatus").textContent=tr("marketUnavailable")});
+let qzixSelectedTokenNumber=null;
+async function startGridTokenPurchase(tokenNumber){
+ if(!Number.isInteger(tokenNumber)||tokenNumber<1||tokenNumber>100)return;
+ const card=$("qzix-token-"+tokenNumber);
+ if(!card||!card.classList.contains("available"))return;
+ if(!currentQzixUser){
+  $("authStatus").textContent="Please sign up or log in first, then tap the LEFT token again.";
+  $("accountTitle").scrollIntoView({behavior:"smooth",block:"center"});
+  $("email").focus();
+  return;
+ }
+ qzixSelectedTokenNumber=tokenNumber;
+ const select=$("initialBuyToken");
+ if(!select.options.length||!Array.from(select.options).some(o=>Number(o.value)===tokenNumber)){
+  await refreshInitialBuyOptions();
+ }
+ if(!Array.from(select.options).some(o=>Number(o.value)===tokenNumber)){
+  $("tokenAvailabilitySummary").textContent="This token is no longer available. The token list is being refreshed.";
+  await refreshTokenStatus();
+  return;
+ }
+ select.value=String(tokenNumber);
+ $("selectedTokenHeading").textContent="Buy QZIX-"+String(tokenNumber).padStart(3,"0");
+ $("initialBuyPanel").classList.remove("hidden");
+ $("initialBuyStatus").textContent="Creating your payment request for QZIX-"+String(tokenNumber).padStart(3,"0")+"…";
+ $("initialBuyPanel").scrollIntoView({behavior:"smooth",block:"center"});
+ await createInitialManualRequest();
+ await refreshTokenStatus();
+}
+$("tokens").addEventListener("click",e=>{
+ const card=e.target.closest(".token.available");
+ if(card)startGridTokenPurchase(Number(card.id.replace("qzix-token-","")));
+});
+$("tokens").addEventListener("keydown",e=>{
+ if(e.key!=="Enter"&&e.key!==" ")return;
+ const card=e.target.closest(".token.available");
+ if(card){e.preventDefault();startGridTokenPurchase(Number(card.id.replace("qzix-token-","")));}
+});
 async function refreshTokenStatus(){
  if(!supabase)return;
  const summary=$("tokenAvailabilitySummary");
@@ -293,8 +335,11 @@ async function refreshTokenStatus(){
   if(card){
    card.classList.toggle("bought",isBought);
    card.classList.toggle("available",!isBought);
+   card.setAttribute("role",isBought?"img":"button");
+   card.setAttribute("tabindex",isBought?"-1":"0");
+   card.setAttribute("aria-label","QZIX-"+String(number).padStart(3,"0")+" · "+(isBought?"Already bought":"Left — click to buy"));
    card.innerHTML="<b>"+String(number).padStart(3,"0")+"</b><small>"+(isBought?"BOUGHT":"LEFT")+"</small>";
-   card.title="QZIX-"+String(number).padStart(3,"0")+" · "+(isBought?"Bought":"Available");
+   card.title="QZIX-"+String(number).padStart(3,"0")+" · "+(isBought?"Bought":"Click to buy");
   }
  }
  const left=Math.max(0,100-bought);
@@ -453,7 +498,6 @@ async function refreshMyInitialOrders(){
  $("myInitialOrders").innerHTML=data.map(r=>"<div style='padding:9px 0;border-bottom:1px solid var(--line)'><b>QZIX-"+String(r.token_number).padStart(3,"0")+"</b> · "+money(r.amount)+" · <b>"+safeText(r.status.replaceAll("_"," ").toUpperCase())+"</b><br><small>"+safeText(new Date(r.created_at).toLocaleString())+(r.payment_reference?" · UTR: "+safeText(r.payment_reference):"")+"</small>"+(r.admin_note?"<br><small>Admin note: "+safeText(r.admin_note)+"</small>":"")+"</div>").join("");
 }
 async function initializeInitialBuy(){
- $("initialBuyPanel").classList.remove("hidden");
  await refreshInitialBuyOptions();
  await refreshMyInitialOrders();
 }
@@ -557,10 +601,7 @@ async function refreshMyPaymentRequests(){
  $("myPaymentRequests").innerHTML=data.map(r=>"<div style='padding:10px 0;border-bottom:1px solid var(--line)'><b>QZIX-"+String(r.token_number).padStart(3,"0")+"</b> · "+money(r.amount)+" · <b>"+safeText(r.status.toUpperCase())+"</b><br><small>UTR: "+safeText(r.payment_reference)+" · "+safeText(new Date(r.created_at).toLocaleString())+"</small>"+(r.admin_note?"<br><small>Admin note: "+safeText(r.admin_note)+"</small>":"")+"</div>").join("");
 }
 async function initializeManualPayments(){
- showUpiInstructions();
- $("buyPanel").classList.remove("hidden");
- await refreshBuyTokens();
- await refreshMyPaymentRequests();
+ $("buyPanel").classList.add("hidden");
  const {data:admin,error}=await supabase.from("qzix_v2_admins").select("user_id").eq("user_id",currentQzixUser.id).maybeSingle();
  if(!error&&admin){
    $("manualPaymentAdminPanel").classList.remove("hidden");
