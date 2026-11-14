@@ -73,7 +73,6 @@ button.secondary{background:#172b45;border:1px solid #385575;box-shadow:none}
 .simple-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}.simple-step{padding:12px;border-radius:12px;background:#081629;border:1px solid #2b405c}.simple-step b{display:block;color:var(--gold);font-size:13px;margin-bottom:5px}.simple-step span{font-size:12px;color:#c1cede;line-height:1.45}
 .grid{grid-template-columns:1fr}.grid>section:nth-child(2){display:none}
 .price-plan,#tokensTitle,#tokensTitle~p,#tokens{display:none!important}
-body>.wrap>section.panel:has(#verifyToken){display:none}
 #noticeText{font-size:11px;line-height:1.5}
 @media(max-width:600px){.simple-steps{grid-template-columns:1fr}.simple-guide{padding:16px}.wrap{padding:16px 12px 35px}}
 </style>
@@ -348,6 +347,7 @@ $("refreshWallet").addEventListener("click",refreshWallet);
 
 function updateQrGate(){
  const unlocked=Number(window.qzixCurrentPrice||0)>=5000;
+ $("verifyToken").closest("section").classList.toggle("hidden",!unlocked);
  $("verifyToken").disabled=!unlocked;
  $("makeQR").disabled=!unlocked;
  $("qrStatus").textContent=unlocked?"₹5,000 milestone reached. QR verification is now enabled.":"Locked — QR launch begins only at a verified ₹5,000 market price.";
