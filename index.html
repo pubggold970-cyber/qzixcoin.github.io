@@ -72,7 +72,16 @@ button.secondary{background:#172b45;border:1px solid #385575;box-shadow:none}
 .simple-guide h3{margin:0 0 10px;font-size:17px}.simple-guide p{margin:6px 0;color:#b8c7da;font-size:13px;line-height:1.55}
 .simple-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}.simple-step{padding:12px;border-radius:12px;background:#081629;border:1px solid #2b405c}.simple-step b{display:block;color:var(--gold);font-size:13px;margin-bottom:5px}.simple-step span{font-size:12px;color:#c1cede;line-height:1.45}
 .grid{grid-template-columns:1fr}.grid>section:nth-child(2){display:none}
-.price-plan,#tokensTitle,#tokensTitle~p,#tokens{display:none!important}
+.price-plan{display:none!important}
+#tokenAvailabilitySummary{font-size:11px;color:var(--muted);margin:8px 0 12px}
+.token-list{grid-template-columns:repeat(10,minmax(0,1fr));gap:6px}
+.token{padding:7px 2px;text-align:center;min-width:0}
+.token b{font-size:11px;white-space:nowrap}
+.token small{display:block;font-size:9px;line-height:1.2;margin-top:3px;color:var(--muted)}
+.token.bought{background:#103c32;border-color:#27b887}
+.token.bought b,.token.bought small{color:#75efbd}
+.token.available small{color:#a8b8ce}
+@media(max-width:650px){.token-list{grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}.token{padding:6px 1px}.token b{font-size:10px}.token small{font-size:8px}}
 #noticeText{font-size:11px;line-height:1.5}
 @media(max-width:600px){.simple-steps{grid-template-columns:1fr}.simple-guide{padding:16px}.wrap{padding:16px 12px 35px}}
 </style>
@@ -200,7 +209,8 @@ button.secondary{background:#172b45;border:1px solid #385575;box-shadow:none}
 <section class="panel hidden" id="verificationPanel" style="margin-top:16px"><h3>QZIX COIN — Public Token Verification</h3><div id="verificationDetails" class="muted">Loading token verification…</div></section>
 <section class="panel" style="margin-top:16px">
   <h3 id="tokensTitle">100 Unique Token IDs</h3>
-  <p class="muted" id="tokensDesc">Each token has a unique ID. This list is for identification only; it does not confirm ownership or purchase.</p>
+  <p class="muted" id="tokensDesc">Green means bought. Dark means still available.</p>
+  <div id="tokenAvailabilitySummary" aria-live="polite">Loading token status from the database…</div>
   <div class="token-list" id="tokens"></div>
 </section>
 <div class="notice" id="noticeText"><b>Important:</b> QZIX COIN has 100 fixed tokens. A payment reference or screenshot alone is not proof of payment. The admin verifies the actual bank/UPI credit before changing ownership. No profit or future price is guaranteed. There is no SELL option. Complete legal and payment checks before accepting real transactions.</div>
@@ -264,8 +274,32 @@ function applyLanguage(lang){
 $("language").addEventListener("change",e=>{applyLanguage(e.target.value);try{localStorage.setItem("qzix-language",e.target.value)}catch(e){}});
 applyLanguage((()=>{try{const saved=localStorage.getItem("qzix-language");if(saved==="pa"){localStorage.setItem("qzix-language","en");return "en"}return saved||"en"}catch(e){return "en"}})());
 
-for(let i=1;i<=100;i++){const d=document.createElement("div");d.className="token";d.innerHTML=`<b>QZIX-${String(i).padStart(3,"0")}</b><span class="tokenCaption">Unique Token ID</span>`;$("tokens").appendChild(d)}
-window.qzixSupabaseReady.then(()=>{if(configured){try{supabase=window.qzixCreateClient(SUPABASE_URL,SUPABASE_ANON_KEY);$("authStatus").textContent=tr("ready");refreshMarket();checkUser()}catch(e){$("authStatus").textContent="Supabase client failed to start: "+(e?.message||"Unknown error");$("marketStatus").textContent=tr("marketUnavailable")}}else{$("authStatus").textContent=tr("notConfigured");$("marketStatus").textContent=tr("marketUnavailable")}}).catch(e=>{$("authStatus").textContent="Supabase SDK import failed: "+(e?.message||"Check internet connection or browser support");$("marketStatus").textContent=tr("marketUnavailable")});
+for(let i=1;i<=100;i++){const d=document.createElement("div");d.id="qzix-token-"+i;d.className="token available";d.innerHTML=`<b>${String(i).padStart(3,"0")}</b><small>LEFT</small>`;$("tokens").appendChild(d)}
+window.qzixSupabaseReady.then(()=>{if(configured){try{supabase=window.qzixCreateClient(SUPABASE_URL,SUPABASE_ANON_KEY);$("authStatus").textContent=tr("ready");refreshMarket();refreshTokenStatus();setInterval(refreshTokenStatus,30000);checkUser()}catch(e){$("authStatus").textContent="Supabase client failed to start: "+(e?.message||"Unknown error");$("marketStatus").textContent=tr("marketUnavailable")}}else{$("authStatus").textContent=tr("notConfigured");$("marketStatus").textContent=tr("marketUnavailable")}}).catch(e=>{$("authStatus").textContent="Supabase SDK import failed: "+(e?.message||"Check internet connection or browser support");$("marketStatus").textContent=tr("marketUnavailable")});
+async function refreshTokenStatus(){
+ if(!supabase)return;
+ const summary=$("tokenAvailabilitySummary");
+ if(summary)summary.textContent="Updating token status…";
+ const {data,error}=await supabase.from("qzix_v2_tokens").select("token_number,owner_id").order("token_number",{ascending:true});
+ if(error){if(summary)summary.textContent="Token status unavailable: "+error.message;return}
+ const rows=Array.isArray(data)?data:[];
+ let bought=0;
+ for(const row of rows){
+  const number=Number(row.token_number);
+  if(!Number.isInteger(number)||number<1||number>100)continue;
+  const isBought=!!row.owner_id;
+  if(isBought)bought++;
+  const card=$("qzix-token-"+number);
+  if(card){
+   card.classList.toggle("bought",isBought);
+   card.classList.toggle("available",!isBought);
+   card.innerHTML="<b>"+String(number).padStart(3,"0")+"</b><small>"+(isBought?"BOUGHT":"LEFT")+"</small>";
+   card.title="QZIX-"+String(number).padStart(3,"0")+" · "+(isBought?"Bought":"Available");
+  }
+ }
+ const left=Math.max(0,100-bought);
+ if(summary)summary.textContent="Bought: "+bought+"  ·  Left: "+left+"  ·  Total: 100";
+}
 async function refreshMarket(){
  if(!supabase)return;
  $("marketStatus").textContent=tr("marketLoading");
