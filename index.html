@@ -401,7 +401,7 @@ async function refreshMyOwnedTokens(){
    .order("token_number",{ascending:true});
  if(error){target.textContent="Your tokens could not be loaded: "+error.message;return}
  if(!data?.length){target.textContent="No tokens are assigned to your account yet. After admin approves your payment, your token will appear here.";return}
- target.innerHTML=data.map(t=>"<div style='padding:10px 0;border-bottom:1px solid var(--line)'><b>QZIX-"+String(t.token_number).padStart(3,"0")+"</b> · Owned by your account<br><small>Purchase amount: "+money(t.acquisition_cost||0)+" · "+(t.acquisition_cost_verified_at?"Admin verified":"Verification pending")+"</small></div>").join("");
+ target.innerHTML=data.map(t=>"<div style='padding:10px 0;border-bottom:1px solid var(--line)'><b>QZIX-"+String(t.token_number).padStart(3,"0")+"</b><br><small>Owner account: "+safeText(currentQzixUser.email||"Your account")+"<br>Purchase amount: "+money(t.acquisition_cost||0)+" · "+(t.acquisition_cost_verified_at?"Admin verified":"Verification pending")+"</small></div>").join("");
 }
 async function refreshWallet(){
  if(!supabase)return;
