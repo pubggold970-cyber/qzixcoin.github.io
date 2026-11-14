@@ -190,13 +190,6 @@ button.secondary{background:#172b45;border:1px solid #385575;box-shadow:none}
     <button id="qzixEnableAlerts" class="secondary" type="button">Enable Browser Notifications</button>
     <span id="qzixAlertStatus" class="status" aria-live="polite">Notifications are not enabled yet.</span>
   </div>
-  <h3>Admin — Initial Token Assignment</h3>
-  <p class="muted">Assign one unassigned token to an existing buyer account using the buyer's User UUID. This is an initial admin allocation only: it does not record a payment or add wallet funds. Already assigned tokens cannot be reassigned here.</p>
-  <div class="notice">Only use this for the first allocation of an unassigned token. For resale, use the BUY request and verify the actual payment in your bank/UPI app.</div>
-  <label class="field"><span>Unassigned Token ID</span><select id="initialAssignToken"><option value="">Loading unassigned tokens…</option></select></label>
-  <label class="field"><span>Buyer User UUID</span><input id="initialAssignBuyer" type="text" autocomplete="off" placeholder="Paste the buyer's Supabase User UUID"></label>
-  <button id="assignInitialToken">Assign Token to Buyer</button>
-  <div class="status" id="initialAssignStatus" aria-live="polite"></div>
   <hr style="border:0;border-top:1px solid var(--line);margin:18px 0">
   <h3>Admin — Initial Company Purchase UPI Review</h3>
   <p class="muted">Approve only after matching the exact amount and UTR against the actual incoming Paytm/bank credit. Approval assigns the token and credits the company wallet.</p>
@@ -668,43 +661,13 @@ async function initializeManualPayments(){
  const {data:admin,error}=await supabase.from("qzix_v2_admins").select("user_id").eq("user_id",currentQzixUser.id).maybeSingle();
  if(!error&&admin){
    $("manualPaymentAdminPanel").classList.remove("hidden");
-   await refreshUnassignedTokens();
-   await refreshInitialManualQueue();
+    await refreshInitialManualQueue();
    await refreshManualPaymentQueue();
    startQzixAdminRealtimeAlerts();
  }else{
    $("manualPaymentAdminPanel").classList.add("hidden");
  }
 }
-async function refreshUnassignedTokens(){
- const select=$("initialAssignToken");
- if(!select||!supabase)return;
- select.innerHTML="<option value=''>Loading unassigned tokens…</option>";
- const {data,error}=await supabase.from("qzix_v2_tokens").select("token_number").is("owner_id",null).order("token_number",{ascending:true});
- if(error){select.innerHTML="<option value=''>Could not load tokens</option>";$("initialAssignStatus").textContent="Token list error: "+error.message;return}
- if(!data?.length){select.innerHTML="<option value=''>No unassigned tokens remain</option>";$("initialAssignStatus").textContent="All 100 tokens are currently assigned.";return}
- select.innerHTML="<option value=''>Choose an unassigned token</option>"+data.map(t=>"<option value='"+Number(t.token_number)+"'>QZIX-"+String(t.token_number).padStart(3,"0")+"</option>").join("");
-}
-async function assignInitialToken(){
- if(!supabase||!currentQzixUser){$("initialAssignStatus").textContent="Admin login required.";return}
- const tokenNumber=Number($("initialAssignToken").value);
- const ownerId=$("initialAssignBuyer").value.trim();
- const uuidPattern=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
- if(!Number.isInteger(tokenNumber)||tokenNumber<1||tokenNumber>100){$("initialAssignStatus").textContent="Choose an unassigned token from 001 to 100.";return}
- if(!uuidPattern.test(ownerId)){$("initialAssignStatus").textContent="Enter a valid buyer User UUID.";return}
- if(!confirm("Assign QZIX-"+String(tokenNumber).padStart(3,"0")+" to this buyer as its first owner? This does not verify payment or add wallet funds. This assignment cannot be undone from this screen."))return;
- $("assignInitialToken").disabled=true;
- $("initialAssignStatus").textContent="Assigning token…";
- const {error}=await supabase.rpc("qzix_admin_assign_token",{p_token_number:tokenNumber,p_owner_id:ownerId});
- $("assignInitialToken").disabled=false;
- if(error){$("initialAssignStatus").textContent="Assignment failed: "+error.message;return}
- $("initialAssignBuyer").value="";
- $("initialAssignStatus").textContent="Token assigned to the buyer's account. No payment or wallet credit was recorded.";
- await refreshUnassignedTokens();
- await refreshBuyTokens();
-}
-$("assignInitialToken").addEventListener("click",assignInitialToken);
-
 async function refreshInitialManualQueue(){
  if(!supabase)return;
  $("initialManualAdminStatus").textContent="Loading initial purchase requests…";
